@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const SignupPage = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Logique pour s'inscrire via une API (à implémenter)
-        console.log('Name:', name, 'Email:', email, 'Password:', password);
+        try {
+            const response = await axios.post('/api/signup', { name, email, password });
+            if (response.data.success) {
+                setSuccess('Inscription réussie, veuillez vérifier votre email.');
+            } else {
+                setError('Une erreur est survenue lors de l\'inscription.');
+            }
+        } catch (error) {
+            setError('Erreur lors de l\'inscription.');
+        }
     };
 
     return (
@@ -42,6 +53,8 @@ const SignupPage = () => {
                         required
                     />
                 </div>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {success && <p style={{ color: 'green' }}>{success}</p>}
                 <button type="submit">S'inscrire</button>
             </form>
         </div>

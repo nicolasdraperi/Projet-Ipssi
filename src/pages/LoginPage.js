@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useHistory } from 'react-router-dom';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const history = useHistory();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Logique pour se connecter via une API (à implémenter)
-        console.log('Email:', email, 'Password:', password);
+        try {
+            const response = await axios.post('/api/login', { email, password });
+            if (response.data.success) {
+                history.push('/dashboard'); // Redirection après connexion réussie
+            } else {
+                setError('Identifiants incorrects');
+            }
+        } catch (error) {
+            setError('Une erreur est survenue lors de la connexion.');
+        }
     };
 
     return (
@@ -32,6 +44,7 @@ const LoginPage = () => {
                         required
                     />
                 </div>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <button type="submit">Se connecter</button>
             </form>
         </div>

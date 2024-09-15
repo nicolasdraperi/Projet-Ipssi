@@ -1,0 +1,15 @@
+{
+    "users": [
+      { "id": 1, "name": "User1", "email": "user1@example.com", "password": "password" }
+    ],
+    "files": [
+      { "id": 1, "name": "fichier1.pdf", "size": "2" },
+      { "id": 2, "name": "fichier2.png", "size": "1.5" }
+    ],
+    "adminStats": {
+      "totalFiles": 120,
+      "filesToday": 5,
+      "activeUsers": 20
+    }
+  }
+  

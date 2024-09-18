@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom'; // Importer Link et useNavigate
+import '../assets/css/AuthPage.css';
 
 const SignupPage = () => {
     const [name, setName] = useState('');
@@ -7,6 +9,7 @@ const SignupPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,6 +17,7 @@ const SignupPage = () => {
             const response = await axios.post('/api/signup', { name, email, password });
             if (response.data.success) {
                 setSuccess('Inscription réussie, veuillez vérifier votre email.');
+                navigate('/');  // Redirection vers la page de connexion après inscription réussie
             } else {
                 setError('Une erreur est survenue lors de l\'inscription.');
             }
@@ -23,7 +27,7 @@ const SignupPage = () => {
     };
 
     return (
-        <div className="signup-page">
+        <div className="auth-page">
             <h2>Inscription</h2>
             <form onSubmit={handleSubmit}>
                 <div>
@@ -57,6 +61,8 @@ const SignupPage = () => {
                 {success && <p style={{ color: 'green' }}>{success}</p>}
                 <button type="submit">S'inscrire</button>
             </form>
+
+            <p>Déjà inscrit ? <Link to="/">Se connecter</Link></p> {/* Lien vers la page de connexion */}
         </div>
     );
 };

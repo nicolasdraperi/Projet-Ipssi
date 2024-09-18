@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  // Remplacer useHistory par useNavigate
+import { useNavigate, Link } from 'react-router-dom'; // Importer Link
+import '../assets/css/AuthPage.css';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();  // Remplacer useHistory par useNavigate
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const response = await axios.post('/api/login', { email, password });
             if (response.data.success) {
-                navigate('/dashboard');  // Utilisation de navigate au lieu de history.push
+                navigate('/dashboard'); // Redirection vers le tableau de bord
             } else {
                 setError('Identifiants incorrects');
             }
@@ -23,7 +24,7 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="login-page">
+        <div className="auth-page">
             <h2>Connexion</h2>
             <form onSubmit={handleSubmit}>
                 <div>
@@ -47,6 +48,8 @@ const LoginPage = () => {
                 {error && <p style={{ color: 'red' }}>{error}</p>}
                 <button type="submit">Se connecter</button>
             </form>
+
+            <p>Pas encore inscrit ? <Link to="/signup">Créer un compte</Link></p> {/* Lien vers la page d'inscription */}
         </div>
     );
 };

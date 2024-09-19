@@ -14,7 +14,7 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('/api/signup', { name, email, password });
+            const response = await axios.post(`http://localhost:5000/users?email=${email}&password=${password}`);
             if (response.data.success) {
                 setSuccess('Inscription réussie, veuillez vérifier votre email.');
                 navigate('/');  // Redirection vers la page de connexion après inscription réussie

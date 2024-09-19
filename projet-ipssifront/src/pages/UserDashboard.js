@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-
+import '../assets/css/Dashboard.css';
 const UserDashboard = () => {
     const [files, setFiles] = useState([]);
 

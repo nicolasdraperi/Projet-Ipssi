@@ -7,19 +7,28 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');  // Ajouter useState pour success
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('/api/login', { email, password });
-            if (response.data.success) {
-                navigate('/dashboard'); // Redirection vers le tableau de bord
+            // Appel à l'API json-server pour chercher l'utilisateur
+            const response = await axios.get(`http://localhost:5000/users?email=${email}&password=${password}`);
+
+            if (response.data.length > 0) {
+                // Si l'utilisateur est trouvé, on affiche un message de succès
+                setSuccess('Connexion réussie !');
+                setError('');
+                // Rediriger vers une autre page après la connexion
+                navigate('/dashboard');  // Redirection vers le tableau de bord (ou autre page)
             } else {
+                // Si l'utilisateur n'est pas trouvé, on affiche un message d'erreur
                 setError('Identifiants incorrects');
+                setSuccess('');
             }
-        } catch (error) {
-            setError('Une erreur est survenue lors de la connexion.');
+        } catch (err) {
+            setError('Erreur lors de la connexion');
         }
     };
 
@@ -46,6 +55,7 @@ const LoginPage = () => {
                     />
                 </div>
                 {error && <p style={{ color: 'red' }}>{error}</p>}
+                {success && <p style={{ color: 'green' }}>{success}</p>}
                 <button type="submit">Se connecter</button>
             </form>
 

@@ -1,0 +1,47 @@
+.user-dashboard {
+    padding: 20px;
+    background-color: #f0f0f5;
+    min-height: 100vh;
+}
+
+h2 {
+    font-size: 2rem;
+    color: #333;
+}
+
+.file-list {
+    margin-top: 20px;
+}
+
+.file-list h3 {
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.file-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.file-list li {
+    background-color: white;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+}
+
+.file-list li:hover {
+    background-color: #f9f9f9;
+}
+
+.file-name {
+    font-weight: bold;
+}
+
+.file-size {
+    color: #555;
+}

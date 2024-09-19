@@ -1,15 +1,50 @@
 {
-    "users": [
-      { "id": 1, "name": "User1", "email": "user1@example.com", "password": "password" }
-    ],
-    "files": [
-      { "id": 1, "name": "fichier1.pdf", "size": "2" },
-      { "id": 2, "name": "fichier2.png", "size": "1.5" }
-    ],
-    "adminStats": {
-      "totalFiles": 120,
-      "filesToday": 5,
-      "activeUsers": 20
+  "users": [
+    {
+      "id": "1",
+      "name": "User1",
+      "email": "user1@example.com",
+      "password": "password"
+    },
+    {
+      "id": "ec6f"
+    },
+    {
+      "id": "114b"
+    },
+    {
+      "id": "7554"
+    },
+    {
+      "id": "949d"
+    },
+    {
+      "id": "bcbb"
+    },
+    {
+      "id": "47db"
+    },
+    {
+      "id": "588f"
+    },
+    {
+      "id": "1eba"
+    },
+    {
+      "id": "fd1a"
+    },
+    {
+      "id": "47db"
     }
+  ],
+  "files": [
+    { "id": 1, "name": "Document1.pdf", "size": 2.3 },
+      { "id": 2, "name": "Image1.png", "size": 4.8 },
+      { "id": 3, "name": "Présentation.ppt", "size": 3.1 }
+  ],
+  "adminStats": {
+    "totalFiles": 120,
+    "filesToday": 5,
+    "activeUsers": 20
   }
-  
+}

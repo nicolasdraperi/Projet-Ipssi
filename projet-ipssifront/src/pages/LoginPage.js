@@ -1,34 +1,41 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom'; // Importer Link
+import { useNavigate, Link } from 'react-router-dom';
 import '../assets/css/AuthPage.css';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');  // Ajouter useState pour success
+    const [success, setSuccess] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Appel à l'API json-server pour chercher l'utilisateur
-            const response = await axios.get(`http://localhost:5000/users?email=${email}&password=${password}`);
+            // Appel à l'API backend pour vérifier les identifiants
+            const response = await axios.post('http://localhost:5000/api/login', {
+                email,
+                password
+            });
 
-            if (response.data.length > 0) {
-                // Si l'utilisateur est trouvé, on affiche un message de succès
+            // Si la connexion réussie, on reçoit un token
+            const token = response.data.token;
+            if (token) {
+                // Sauvegarder le token dans localStorage
+                localStorage.setItem('token', token);
+
+                // Afficher un message de succès et rediriger vers le tableau de bord
                 setSuccess('Connexion réussie !');
                 setError('');
-                // Rediriger vers une autre page après la connexion
-                navigate('/dashboard');  // Redirection vers le tableau de bord (ou autre page)
+                navigate('/dashboard');
             } else {
-                // Si l'utilisateur n'est pas trouvé, on affiche un message d'erreur
-                setError('Identifiants incorrects');
+                setError('Erreur de connexion');
                 setSuccess('');
             }
         } catch (err) {
-            setError('Erreur lors de la connexion');
+            setError(err.response?.data?.message || 'Erreur lors de la connexion');
+            setSuccess('');
         }
     };
 

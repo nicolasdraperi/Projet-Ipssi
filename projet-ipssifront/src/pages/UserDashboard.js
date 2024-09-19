@@ -1,33 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import '../assets/css/Dashboard.css';
+import React, { useState } from 'react';
+import Files from '../components/FileList';  // Importer les sous-composants
+import FileUpload from '../components/FileUpload';
+import PurchaseStorage from '../components/PurchaseStorage';
+import Invoices from '../components/Invoices';
+import '../assets/css/Dashboard.css'
 const UserDashboard = () => {
-    const [files, setFiles] = useState([]);
+    const [activeTab, setActiveTab] = useState('files');  // Onglet actif
 
-    useEffect(() => {
-        // Récupérer les fichiers via une API
-        const fetchFiles = async () => {
-            try {
-                const response = await axios.get('/api/files');
-                setFiles(response.data);
-            } catch (error) {
-                console.error('Erreur lors de la récupération des fichiers:', error);
-            }
-        };
-        fetchFiles();
-    }, []);
+    // Fonction pour rendre le contenu de l'onglet actif
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'files':
+                return <Files />;
+            case 'upload':
+                return <FileUpload />;
+            case 'subscription':
+                return <PurchaseStorage />;
+            case 'invoices':
+                return <Invoices />;
+            default:
+                return <Files />;
+        }
+    };
 
     return (
-        <div className="user-dashboard">
-            <h2>Tableau de bord utilisateur</h2>
-            <p>Bienvenue sur votre espace de gestion des fichiers.</p>
-            <div className="file-list">
-                <h3>Vos fichiers</h3>
-                <ul>
-                    {files.map(file => (
-                        <li key={file.id}>{file.name} - {file.size} Mo</li>
-                    ))}
-                </ul>
+        <div className="dashboard">
+            <h2>Tableau de bord</h2>
+
+            {/* Onglets de navigation */}
+            <nav className="dashboard-nav">
+                <button onClick={() => setActiveTab('files')}>Mes fichiers</button>
+                <button onClick={() => setActiveTab('upload')}>Uploader</button>
+                <button onClick={() => setActiveTab('subscription')}>Acheter de l'espace</button>
+                <button onClick={() => setActiveTab('invoices')}>Mes factures</button>
+            </nav>
+
+            {/* Contenu de l'onglet actif */}
+            <div className="dashboard-content">
+                {renderTabContent()}
             </div>
         </div>
     );

@@ -14,7 +14,7 @@ const LoginPage = () => {
         e.preventDefault();
         try {
             // Appel à l'API backend pour vérifier les identifiants
-            const response = await axios.post('http://localhost:5000/api/login', {
+            const response = await axios.post('http://localhost:5000/auth/login', {
                 email,
                 password
             });

@@ -1,0 +1,13 @@
+nelmio_cors:
+    defaults:
+        allow_origin: ['*']  # Autorise toutes les origines (remplacer '*' par ton domaine spécifique si nécessaire)
+        allow_credentials: true
+        allow_headers: ['Content-Type', 'Authorization']
+        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+        max_age: 3600
+    paths:
+        '^/api/':  # Applique CORS aux routes d'API
+            allow_origin: ['http://localhost:3000']  # Spécifie l'origine du frontend React
+            allow_headers: ['Content-Type', 'Authorization']
+            allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+            max_age: 3600

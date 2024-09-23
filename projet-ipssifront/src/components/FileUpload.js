@@ -20,13 +20,16 @@ const FileUpload = () => {
         formData.append('file', file);
 
         try {
-            // Simuler l'upload avec json-server ou l'API réelle plus tard
+            // Appel à l'API pour uploader le fichier
             const response = await axios.post('http://localhost:5000/files', formData, {
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                     setUploadProgress(percentCompleted);
                 }
             });
+
+            // Afficher la réponse de l'API
+            console.log(response.data);  // Afficher les données retournées par l'API
 
             setMessage('Fichier uploadé avec succès !');
         } catch (error) {

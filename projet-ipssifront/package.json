@@ -40,5 +40,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:8000"
+  "proxy": "http://localhost:8000",
+  "devDependencies": {
+    "webpack": "^5.94.0",
+    "webpack-dev-server": "^5.1.0"
+  }
 }

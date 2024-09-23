@@ -4,6 +4,12 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const cors = require('cors');
 app.use(express.json());  // Middleware pour gérer les requêtes avec du JSON
+const sequelize = require('./config/database');
+
+// Synchroniser Sequelize avec la base de données
+sequelize.sync({ alter: true })  // alter: true permet de mettre à jour la table si nécessaire
+    .then(() => console.log('Base de données synchronisée avec Sequelize.'))
+    .catch(err => console.error('Erreur lors de la synchronisation de la base de données:', err));
 
 // Autoriser toutes les origines (non recommandé pour la production)
 app.use(cors({

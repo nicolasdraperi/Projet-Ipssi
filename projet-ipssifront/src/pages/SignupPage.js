@@ -15,16 +15,26 @@ const SignupPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/api/register', { firstName, lastName, address, email, password });
+            const response = await axios.post('http://localhost:5000/api/register', { 
+                firstName, 
+                lastName, 
+                address, 
+                email, 
+                password 
+            });
 
-            if (response.data.success) {
+            // Vérifier le statut de la réponse
+            if (response.status === 201) {  // Si le statut est 201 (inscription réussie)
                 setSuccess('Inscription réussie, vous pouvez vous connecter.');
-                navigate('/login');  // Rediriger vers la page de connexion après inscription réussie
+                setError('');
+                // Rediriger vers la page de connexion après 2 secondes
+                setTimeout(() => navigate('/login'), 2000);
             } else {
                 setError('Erreur lors de l\'inscription.');
             }
         } catch (err) {
-            setError('Erreur lors de l\'inscription.');
+            setError(err.response?.data?.message || 'Erreur lors de l\'inscription.');
+            setSuccess('');
         }
     };
 

@@ -1,18 +1,44 @@
-const bcrypt = require('bcryptjs');
-const users = [];  // Simuler une base de données
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-class User {
-  constructor(id, email, password, firstName, lastName, address) {
-    this.id = id;
-    this.email = email;
-    this.password = bcrypt.hashSync(password, 10);
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.address = address;
-  }
-}
+const User = sequelize.define('User', {
+    ID_Utilisateur: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    Nom: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    Prenom: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    Email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    Mot_de_passe: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    Adresse: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    Ville: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    Date_inscription: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    },
+}, {
+    tableName: 'utilisateur',
+    timestamps: false,
+});
 
-module.exports = {
-  User,
-  users
-};
+module.exports = User;

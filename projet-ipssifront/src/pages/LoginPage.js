@@ -25,10 +25,12 @@ const LoginPage = () => {
                 // Sauvegarder le token dans localStorage
                 localStorage.setItem('token', token);
 
-                // Afficher un message de succès et rediriger vers le tableau de bord
+                // Afficher un message de succès
                 setSuccess('Connexion réussie !');
                 setError('');
-                navigate('/dashboard');
+
+                // Rediriger vers le tableau de bord après un court délai pour afficher le succès
+                setTimeout(() => navigate('/dashboard'), 1000);  // Redirection après 1 seconde
             } else {
                 setError('Erreur de connexion');
                 setSuccess('');
@@ -66,7 +68,7 @@ const LoginPage = () => {
                 <button type="submit">Se connecter</button>
             </form>
 
-            <p>Pas encore inscrit ? <Link to="/signup">Créer un compte</Link></p> {/* Lien vers la page d'inscription */}
+            <p>Pas encore inscrit ? <Link to="/signup">Créer un compte</Link></p>
         </div>
     );
 };

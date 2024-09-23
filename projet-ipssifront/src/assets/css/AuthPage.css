@@ -1,0 +1,69 @@
+/* Styles communs pour les pages de connexion et d'inscription */
+.auth-page {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.auth-page h2 {
+    color: #333;
+    text-align: center;
+}
+
+.auth-page input[type="text"],
+.auth-page input[type="email"],
+.auth-page input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.auth-page button {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.auth-page button:hover {
+    background-color: #0056b3;
+}
+
+.auth-page p {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.auth-page p a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.auth-page p a:hover {
+    text-decoration: underline;
+}
+
+/* Message d'erreur ou de succès */
+.error {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+}
+
+.success {
+    color: green;
+    font-size: 14px;
+    text-align: center;
+}

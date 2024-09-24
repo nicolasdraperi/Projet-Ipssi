@@ -39,6 +39,14 @@ app.post('/api/login', (req, res) => {
     });
 });
 
+app.get('/api/login', (req, res) => {
+    res.send('connectrez vous pars /api/login.');
+});
+
+app.get('/', (req, res) => {
+    res.redirect('/api/login');
+});
+
 // Démarrer le serveur
 const PORT = 5000;
 app.listen(PORT, () => {

@@ -10,8 +10,11 @@ const App = () => {
             <div className="app">
                 <Header />
                 <Routes>
+                    <Route path="/login" component={LoginPage} />
+                    <Route path="/signup" component={SignupPage} />
                     {/* Route unique pour le Dashboard */}
                     <Route path="/dashboard" element={<UserDashboard />} />
+                    <Route exact path="/" component={LoginPage} />  {/* Default route to Login */}
                 </Routes>
                 <Footer />
             </div>

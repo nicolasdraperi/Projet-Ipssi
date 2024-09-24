@@ -39,10 +39,10 @@ const SignupPage = () => {
     };
 
     return (
-        <div>
-            <h2>Inscription</h2>
+        <div className="auth-page">
+            <h2>Créer un compte</h2>
             <form onSubmit={handleSubmit}>
-                <div>
+                <div className="input-group">
                     <label>Prénom :</label>
                     <input 
                         type="text" 
@@ -51,7 +51,7 @@ const SignupPage = () => {
                         required 
                     />
                 </div>
-                <div>
+                <div className="input-group">
                     <label>Nom :</label>
                     <input 
                         type="text" 
@@ -60,7 +60,7 @@ const SignupPage = () => {
                         required 
                     />
                 </div>
-                <div>
+                <div className="input-group">
                     <label>Adresse :</label>
                     <input 
                         type="text" 
@@ -69,7 +69,7 @@ const SignupPage = () => {
                         required 
                     />
                 </div>
-                <div>
+                <div className="input-group">
                     <label>Email :</label>
                     <input 
                         type="email" 
@@ -78,7 +78,7 @@ const SignupPage = () => {
                         required 
                     />
                 </div>
-                <div>
+                <div className="input-group">
                     <label>Mot de passe :</label>
                     <input 
                         type="password" 

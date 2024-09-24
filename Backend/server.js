@@ -1,40 +1,46 @@
-require('dotenv').config();
 const express = require('express');
-const nodemailer = require('nodemailer');
-
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const app = express();
-app.use(express.json());
 
+app.use(express.json());  // Pour gérer les requêtes avec du JSON
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.MAIL,
-        pass: process.env.MPASSWORDD
+// Simuler une base de données utilisateur
+const users = [
+    {
+        id: 1,
+        email: 'user@example.com',
+        password: bcrypt.hashSync('password', 10)  // Hasher le mot de passe pour la comparaison plus tard
     }
-});
+];
 
-// Route pour envoyer l'email
-app.post('/send-email', (req, res) => {
-    const { to, subject, text } = req.body;
+// Route pour gérer la connexion
+app.post('/api/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    // Trouver l'utilisateur
+    const user = users.find(u => u.email === email);
+    if (!user) {
+        return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
 
-    const mailOptions = {
-        from: process.env.MAIL,
-        to,
-        subject,
-        text
-    };
+    // Vérifier le mot de passe
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Mot de passe incorrect' });
+    }
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return res.status(500).json({ error: error.toString() });
-        }
-        res.status(200).json({ message: 'Email sent: ' + info.response });
+    // Créer un token JWT
+    const token = jwt.sign({ id: user.id, email: user.email }, 'secret', { expiresIn: '1h' });
+
+    res.json({
+        message: 'Connexion réussie',
+        token  // Renvoyer le token au front-end
     });
 });
 
-
-const PORT = 3000;
+// Démarrer le serveur
+const PORT = 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Serveur backend démarré sur le port ${PORT}`);
 });

@@ -46,18 +46,19 @@ const FileUpload = () => {
         try {
             console.log("Début de l'upload du fichier...");
 
-            await axios.post('http://localhost:5000/api/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-                onUploadProgress: (progressEvent) => {
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setUploadProgress(percentCompleted);
+          // Utiliser l'URL correcte pour l'upload
+          await axios.post('http://localhost:5000/api/files/upload', formData, { // URL corrigée ici
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(percentCompleted);
 
-                    // Debugging: afficher la progression
-                    console.log("Progression de l'upload :", percentCompleted, "%");
-                }
-            });
+                // Debugging: afficher la progression
+                console.log("Progression de l'upload :", percentCompleted, "%");
+            }
+        });
 
             console.log("Fichier uploadé avec succès !");
             setMessage('Fichier uploadé avec succès !');

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/css/Header.css';
 
-const Header = () => {
+const Header = ({ onLogout }) => {
     return (
         <header className="header">
             <div className="header-logo">
@@ -13,7 +13,8 @@ const Header = () => {
                     <li><Link to="/dashboard">Dashboard</Link></li>
                     <li><Link to="/settings">Paramètres</Link></li>
                     <li><Link to="/account">Gestion de compte</Link></li>
-                    <li><Link to="/logout">Déconnexion</Link></li>
+                    {/* Remplace le lien de déconnexion par un bouton qui déclenche la fonction onLogout */}
+                    <li><button onClick={onLogout}>Déconnexion</button></li>
                 </ul>
             </nav>
         </header>

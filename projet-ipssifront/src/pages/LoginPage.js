@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import '../assets/css/AuthPage.css';
 
-const LoginPage = () => {
+const LoginPage = ({ onLogin }) => {  // Ajoute "onLogin" comme prop
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -13,24 +13,23 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Appel à l'API backend pour vérifier les identifiants
             const response = await axios.post('http://localhost:5000/api/login', {
                 email,
                 password
             });
 
-            // Si la connexion réussie, on reçoit un token
             const token = response.data.token;
             if (token) {
-                // Sauvegarder le token dans localStorage
                 localStorage.setItem('token', token);
 
-                // Afficher un message de succès
                 setSuccess('Connexion réussie !');
                 setError('');
 
-                // Rediriger vers le tableau de bord après un court délai pour afficher le succès
-                setTimeout(() => navigate('/dashboard'), 1000);  // Redirection après 1 seconde
+                // Appeler la fonction onLogin pour mettre à jour isAuthenticated dans App.js
+                onLogin();
+
+                // Rediriger vers le tableau de bord immédiatement
+                navigate('/dashboard');
             } else {
                 setError('Erreur de connexion');
                 setSuccess('');

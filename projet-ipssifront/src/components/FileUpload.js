@@ -7,12 +7,20 @@ const FileUpload = () => {
     const [message, setMessage] = useState('');
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+        const selectedFile = e.target.files[0];
+        setFile(selectedFile);
+
+        // Debugging: afficher les informations sur le fichier sélectionné
+        console.log("Fichier sélectionné :");
+        console.log("Nom :", selectedFile.name);
+        console.log("Type :", selectedFile.type);
+        console.log("Taille :", (selectedFile.size / 1024 / 1024).toFixed(2), "Mo");
     };
 
     const handleUpload = async () => {
         if (!file) {
             setMessage('Veuillez sélectionner un fichier.');
+            console.log("Aucun fichier sélectionné.");
             return;
         }
 
@@ -20,6 +28,7 @@ const FileUpload = () => {
         const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
         if (!allowedTypes.includes(file.type)) {
             setMessage('Type de fichier non valide. Seuls les fichiers JPEG, PNG et PDF sont acceptés.');
+            console.log("Erreur de type de fichier :", file.type);
             return;
         }
 
@@ -27,6 +36,7 @@ const FileUpload = () => {
         const maxSize = 5 * 1024 * 1024; // 5 Mo
         if (file.size > maxSize) {
             setMessage('Le fichier dépasse la taille maximale autorisée de 5 Mo.');
+            console.log("Erreur de taille de fichier :", (file.size / 1024 / 1024).toFixed(2), "Mo");
             return;
         }
 
@@ -34,19 +44,26 @@ const FileUpload = () => {
         formData.append('file', file);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/upload', formData, {
+            console.log("Début de l'upload du fichier...");
+
+            await axios.post('http://localhost:5000/api/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                     setUploadProgress(percentCompleted);
+
+                    // Debugging: afficher la progression
+                    console.log("Progression de l'upload :", percentCompleted, "%");
                 }
             });
+
+            console.log("Fichier uploadé avec succès !");
             setMessage('Fichier uploadé avec succès !');
         } catch (error) {
+            console.error('Erreur lors de l\'upload du fichier :', error);
             setMessage('Erreur lors de l\'upload.');
-            console.error('Erreur lors de l\'upload du fichier', error);
         }
     };
 

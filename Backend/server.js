@@ -116,12 +116,14 @@ const upload = multer({
 
 // Route pour uploader un fichier
 app.post('/api/files/upload', upload.single('file'), (req, res) => {
+    console.log('Requête d\'upload reçue');  // Log pour vérifier que la route est atteinte
     if (!req.file) {
+        console.log('Aucun fichier reçu ou type de fichier non valide');
         return res.status(400).json({ message: 'Aucun fichier sélectionné ou type de fichier non valide.' });
     }
+    console.log('Fichier uploadé avec succès :', req.file);
     res.json({ message: 'Fichier uploadé avec succès.', file: req.file });
 });
-
 // Route pour récupérer la liste des fichiers
 app.get('/api/files', (req, res) => {
     const directoryPath = path.join(__dirname, 'uploads');

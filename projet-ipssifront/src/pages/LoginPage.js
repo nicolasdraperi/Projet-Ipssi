@@ -17,28 +17,23 @@ const LoginPage = ({ onLogin }) => {  // Ajoute "onLogin" comme prop
                 email,
                 password
             });
-
+    
             const token = response.data.token;
             if (token) {
                 localStorage.setItem('token', token);
-
+                console.log('Token stocké dans le localStorage:', token);  // Ajout d'un log pour vérifier le stockage
                 setSuccess('Connexion réussie !');
                 setError('');
-
-                // Appeler la fonction onLogin pour mettre à jour isAuthenticated dans App.js
-                onLogin();
-
-                // Rediriger vers le tableau de bord immédiatement
+                onLogin();  // Appelle la fonction pour mettre à jour isAuthenticated
                 navigate('/dashboard');
             } else {
                 setError('Erreur de connexion');
-                setSuccess('');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Erreur lors de la connexion');
-            setSuccess('');
+            setError('Erreur lors de la connexion');
         }
     };
+    
 
     return (
         <div className="auth-page">

@@ -15,14 +15,30 @@ const App = () => {
         console.log("Déconnexion : Suppression du token et mise à jour de l'état.");
         localStorage.removeItem('token');  // Supprimer le token
         setIsAuthenticated(false);  // Mettre à jour l'état d'authentification
+        window.location.href = '/login';  // Rediriger explicitement vers la page de connexion
     };
 
     // Mettre à jour l'état isAuthenticated quand le token change dans le localStorage
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         console.log("Vérification du token au lancement :", token);
+
         setIsAuthenticated(!!token);  // Met à jour l'authentification si le token est présent
     }, []);
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const token = localStorage.getItem('token');
+            setIsAuthenticated(!!token);  // Met à jour l'état en fonction du token
+        };
+    
+        window.addEventListener('storage', handleStorageChange);
+    
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
+    
 
     return (
         <Router>

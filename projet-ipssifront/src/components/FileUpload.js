@@ -7,7 +7,7 @@ const FileUpload = () => {
     const [message, setMessage] = useState('');
 
     const handleFileChange = (e) => {
-        setFile(e.target.files[0]);  // Stocke le fichier sélectionné
+        setFile(e.target.files[0]);
     };
 
     const handleUpload = async () => {
@@ -16,23 +16,33 @@ const FileUpload = () => {
             return;
         }
 
+        // Validation du type de fichier (seuls JPEG, PNG et PDF sont acceptés)
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+            setMessage('Type de fichier non valide. Seuls les fichiers JPEG, PNG et PDF sont acceptés.');
+            return;
+        }
+
+        // Validation de la taille de fichier (limite de 5 Mo)
+        const maxSize = 5 * 1024 * 1024; // 5 Mo
+        if (file.size > maxSize) {
+            setMessage('Le fichier dépasse la taille maximale autorisée de 5 Mo.');
+            return;
+        }
+
         const formData = new FormData();
-        formData.append('file', file);  // Ajoute le fichier dans le formData
+        formData.append('file', file);
 
         try {
-            // Appel à l'API pour uploader le fichier
             const response = await axios.post('http://localhost:5000/api/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    setUploadProgress(percentCompleted);  // Met à jour la progression d'upload
+                    setUploadProgress(percentCompleted);
                 }
             });
-
-            // Affiche la réponse de l'API
-            console.log(response.data);
             setMessage('Fichier uploadé avec succès !');
         } catch (error) {
             setMessage('Erreur lors de l\'upload.');

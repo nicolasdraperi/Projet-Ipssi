@@ -13,8 +13,8 @@ const Header = ({ onLogout }) => {
                     <li><Link to="/dashboard">Dashboard</Link></li>
                     <li><Link to="/settings">Paramètres</Link></li>
                     <li><Link to="/account">Gestion de compte</Link></li>
-                    {/* Remplace le lien de déconnexion par un bouton qui déclenche la fonction onLogout */}
-                    <li><button onClick={onLogout}>Déconnexion</button></li>
+                    {/* Remplace le lien de déconnexion par un bouton stylisé */}
+                    <li><button className="logout-btn" onClick={onLogout}>Déconnexion</button></li>
                 </ul>
             </nav>
         </header>

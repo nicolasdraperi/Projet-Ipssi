@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import '../assets/css/FileList.css';  // Import du fichier CSS
 
 const FileList = () => {
     const [files, setFiles] = useState([]);
@@ -15,6 +16,7 @@ const FileList = () => {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
                 });
+                console.log(response.data);  // Afficher les données des fichiers dans la console
                 setFiles(response.data.files);
                 setTotalPages(response.data.totalPages); // Nombre total de pages
             } catch (error) {
@@ -44,36 +46,38 @@ const FileList = () => {
         return /\.(jpeg|jpg|png|gif)$/i.test(fileName);
     };
 
+    // Fonction pour déterminer si un fichier est un PDF
+    const isPdfFile = (fileName) => {
+        return /\.pdf$/i.test(fileName);
+    };
+
     return (
-        <div>
+        <div className="file-list-container">
             <h3>Mes fichiers</h3>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <ul>
+            {error && <p className="error-message">{error}</p>}
+
+            <ul className="file-list">
                 {files.length > 0 ? (
                     files.map((file, index) => {
-                        const uniqueKey = file.id || file.name || index; // Utilisation d'une clé unique
+                        const uniqueKey = file.id || file.name || index;
                         return (
-                            <li key={uniqueKey}>  {/* Utilisation de la clé unique */}
-                                {/* Nom du fichier et taille */}
-                                <strong>{file.name}</strong> - {(file.size / 1024 / 1024).toFixed(2)} Mo
+                            <li key={uniqueKey} className="file-item">
+                                <div className="file-info">
+                                    <strong>{file.name}</strong> - {(file.size / 1024 / 1024).toFixed(2)} Mo
+                                    <p>Date de téléchargement : {new Date(file.uploadDate).toLocaleDateString()}</p>
+                                </div>
 
-                                {/* Prévisualisation si c'est une image */}
-                                {isImageFile(file.name) ? (
-                                    <div>
-                                        <img 
-                                            src={file.url} 
-                                            alt={file.name} 
-                                            style={{ width: '100px', height: 'auto' }} 
-                                        />
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <a href={file.url} target="_blank" rel="noopener noreferrer">Visualiser le fichier</a>
-                                    </div>
-                                )}
+                                <div className="file-preview">
+                                    {isImageFile(file.name) ? (
+                                        <img src={file.url} alt={file.name} className="file-image" />
+                                    ) : isPdfFile(file.name) ? (
+                                        <a href={file.url} target="_blank" rel="noopener noreferrer" className="file-view-btn">Visualiser le PDF</a>
+                                    ) : (
+                                        <a href={file.url} target="_blank" rel="noopener noreferrer" className="file-view-btn">Télécharger le fichier</a>
+                                    )}
+                                </div>
 
-                                {/* Bouton pour supprimer le fichier */}
-                                <button onClick={() => handleDelete(file.id)}>Supprimer</button>
+                                <button className="delete-btn" onClick={() => handleDelete(file.id)}>Supprimer</button>
                             </li>
                         );
                     })
@@ -83,17 +87,20 @@ const FileList = () => {
             </ul>
 
             {/* Pagination */}
-            <div>
-                {Array.from({ length: totalPages }, (_, index) => (
-                    <button 
-                        key={index} 
-                        onClick={() => setPage(index + 1)} 
-                        disabled={page === index + 1}
-                    >
-                        {index + 1}
-                    </button>
-                ))}
-            </div>
+            {totalPages > 1 && (
+                <div className="pagination">
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index}
+                            className={`pagination-btn ${page === index + 1 ? 'active' : ''}`}
+                            onClick={() => setPage(index + 1)}
+                            disabled={page === index + 1}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

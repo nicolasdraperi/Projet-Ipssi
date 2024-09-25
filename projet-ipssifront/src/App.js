@@ -5,40 +5,22 @@ import Footer from './components/Footer';
 import UserDashboard from './pages/UserDashboard';  // Import du Dashboard
 import LoginPage from './pages/LoginPage';  // Import de la page de connexion
 import SignupPage from './pages/SignupPage';  // Import de la page d'inscription
+import AccountManagement from './pages/AccountManagement';  // Import de la page de gestion du compte
 
 const App = () => {
-    // État pour vérifier si l'utilisateur est authentifié
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
     // Fonction pour gérer la déconnexion
     const handleLogout = () => {
-        console.log("Déconnexion : Suppression du token et mise à jour de l'état.");
         localStorage.removeItem('token');  // Supprimer le token
         setIsAuthenticated(false);  // Mettre à jour l'état d'authentification
-        window.location.href = '/login';  // Rediriger explicitement vers la page de connexion
+        window.location.href = '/login';  // Rediriger vers la page de connexion
     };
-
-    // Mettre à jour l'état isAuthenticated quand le token change dans le localStorage
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        console.log("Vérification du token au lancement :", token);
-
-        setIsAuthenticated(!!token);  // Met à jour l'authentification si le token est présent
+        setIsAuthenticated(!!token);  // Met à jour l'état en fonction du token
     }, []);
-    useEffect(() => {
-        const handleStorageChange = () => {
-            const token = localStorage.getItem('token');
-            setIsAuthenticated(!!token);  // Met à jour l'état en fonction du token
-        };
-    
-        window.addEventListener('storage', handleStorageChange);
-    
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
-    }, []);
-    
 
     return (
         <Router>
@@ -52,16 +34,13 @@ const App = () => {
                     <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" /> : <SignupPage />} />
 
                     {/* Route pour le Dashboard, accessible seulement si l'utilisateur est authentifié */}
-                    <Route 
-                        path="/dashboard" 
-                        element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" />} 
-                    />
+                    <Route path="/dashboard" element={isAuthenticated ? <UserDashboard /> : <Navigate to="/login" />} />
 
-                    {/* Rediriger la route "/" vers /dashboard si l'utilisateur est authentifié, sinon vers /login */}
-                    <Route 
-                        path="/" 
-                        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
-                    />
+                    {/* Route pour la gestion du compte, accessible seulement si l'utilisateur est authentifié */}
+                    <Route path="/account" element={isAuthenticated ? <AccountManagement /> : <Navigate to="/login" />} />
+
+                    {/* Redirection de la route "/" vers le Dashboard si l'utilisateur est authentifié, sinon vers /login */}
+                    <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
                 </Routes>
                 <Footer />
             </div>

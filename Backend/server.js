@@ -8,6 +8,7 @@ const multer = require('multer'); // Pour l'upload de fichiers
 const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
 const File = require('./models/File');
+const userRoutes = require('./routes/userRoutes');  // Chemin vers ton fichier userRoutes.js
 
 
 
@@ -34,7 +35,7 @@ app.use('/uploads', express.static('uploads'));
 sequelize.sync({ alter: true })
     .then(() => console.log('Base de données synchronisée avec Sequelize.'))
     .catch(err => console.error('Erreur lors de la synchronisation de la base de données:', err));
-
+app.use('/api', userRoutes);
 // ----------------------------
 // ROUTES D'INSCRIPTION ET CONNEXION
 // ----------------------------

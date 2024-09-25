@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import '../assets/css/AuthPage.css';
 
-const LoginPage = ({ setIsAuthenticated, onLogin }) => {  // Ajoute "onLogin" comme prop
+const LoginPage = ({ setIsAuthenticated, onLogin }) => {  
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -17,26 +17,38 @@ const LoginPage = ({ setIsAuthenticated, onLogin }) => {  // Ajoute "onLogin" co
                 email,
                 password
             });
-            console.log('Réponse du serveur:', response); // Ajoute ceci pour voir la réponse
+            console.log('Réponse du serveur:', response); // Log de la réponse du serveur
     
             const token = response.data.token;
             if (token) {
                 localStorage.setItem('token', token);
-                console.log('Token stocké dans le localStorage:', token);  // Ajout d'un log pour vérifier le stockage
+                console.log('Token stocké dans le localStorage:', token);  // Log pour vérifier le stockage du token
+
+                // Décoder le payload du token JWT pour obtenir le rôle de l'utilisateur
+                const decodedToken = JSON.parse(atob(token.split('.')[1]));
+                const userRole = decodedToken.role;  // Extraction du rôle
+                
+                console.log('Rôle de l\'utilisateur:', userRole);  // Log pour vérifier le rôle extrait
+
                 setSuccess('Connexion réussie !');
                 setError('');
                 setIsAuthenticated(true);
-                onLogin();  // Appelle la fonction pour mettre à jour isAuthenticated
-                navigate('/dashboard');
+                onLogin();  // Mettre à jour l'état de l'authentification
+
+                // Rediriger en fonction du rôle de l'utilisateur
+                if (userRole === 'admin') {
+                    navigate('/admin/dashboard');
+                } else {
+                    navigate('/user/dashboard');
+                }
             } else {
                 setError('Erreur de connexion');
             }
         } catch (err) {
             setError('Erreur lors de la connexion');
-            console.error('Erreur:', err.response ? err.response.data : err.message); // Log plus détaillé de l'erreur
+            console.error('Erreur:', err.response ? err.response.data : err.message);  // Log plus détaillé de l'erreur
         }
     };
-    
 
     return (
         <div className="auth-page">

@@ -36,6 +36,11 @@ const User = sequelize.define('User', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
     },
+    role: {
+        type: DataTypes.STRING,
+        defaultValue: 'user',  // Le rôle par défaut est 'user'
+    },
+    
 }, {
     tableName: 'utilisateur',
     timestamps: false,

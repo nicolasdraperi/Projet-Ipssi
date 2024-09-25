@@ -111,3 +111,24 @@ exports.generateInvoice = (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la génération de la facture.' });
     }
 };
+
+// =================================
+// 6. Changer le rôle d'un utilisateur (admin only)
+// =================================
+exports.changeUserRole = async (req, res) => {
+    const { userId, newRole } = req.body;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+        user.role = newRole;
+        await user.save();
+
+        res.json({ message: `Le rôle de l'utilisateur a été mis à jour en ${newRole}.`, user });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du rôle', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour du rôle.', error });
+    }
+};

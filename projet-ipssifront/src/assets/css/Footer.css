@@ -1,25 +1,55 @@
+/* Style du footer */
 .footer {
     background-color: #333;
     color: white;
-    padding: 10px 20px;
+    padding: 20px;
     text-align: center;
+    border-top: 2px solid #555;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1); /* Effet d'ombre subtile pour le design */
 }
 
 .footer p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 1rem; /* Légèrement agrandi pour une meilleure lisibilité */
+    color: #ccc; /* Couleur plus douce pour le texte */
 }
 
 .footer-links {
-    margin-top: 10px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Ajout d'espace entre les liens */
 }
 
 .footer-links a {
     color: white;
-    margin: 0 10px;
+    font-size: 0.95rem;
     text-decoration: none;
+    padding: 5px 10px;
+    transition: color 0.3s ease, transform 0.3s ease; /* Effet de transition fluide */
 }
 
 .footer-links a:hover {
     color: #007bff;
+    transform: scale(1.1); /* Agrandissement subtil lors du survol */
+}
+
+/* Responsivité pour petits écrans */
+@media (max-width: 768px) {
+    .footer {
+        padding: 15px 10px;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 10px; /* Espacement vertical pour mobile */
+    }
+
+    .footer p {
+        font-size: 0.85rem;
+    }
+
+    .footer-links a {
+        font-size: 0.9rem;
+    }
 }

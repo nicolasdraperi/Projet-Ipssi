@@ -67,3 +67,63 @@
     font-size: 14px;
     text-align: center;
 }
+.auth-page {
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.auth-page h2 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth-page .input-group {
+    margin-bottom: 15px;
+}
+
+.auth-page .input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.auth-page .input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.auth-page button {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.auth-page button:hover {
+    background-color: #0056b3;
+}
+
+.auth-page .error {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+}
+
+.auth-page .success {
+    color: green;
+    font-size: 14px;
+    text-align: center;
+}

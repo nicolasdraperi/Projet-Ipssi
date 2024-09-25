@@ -1,0 +1,24 @@
+.settings-page {
+    padding: 20px;
+}
+
+.settings-page.light {
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.settings-page.dark {
+    background-color: #333;
+    color: #f9f9f9;
+}
+
+.settings-section {
+    margin-bottom: 20px;
+}
+
+select {
+    padding: 8px;
+    margin-left: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}

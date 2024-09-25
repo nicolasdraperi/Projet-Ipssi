@@ -1,4 +1,5 @@
 import React from 'react';
+import '../assets/css/Invoices.css';  // Importation du fichier CSS pour styliser le composant
 
 const Invoices = () => {
     const invoices = [
@@ -21,18 +22,28 @@ const Invoices = () => {
     ];
 
     return (
-        <div>
+        <div className="invoices-container">
             <h2>Mes factures</h2>
-            <ul>
-                {invoices.map(invoice => (
-                    <li key={invoice.id}>
+            {invoices.map(invoice => (
+                <div key={invoice.id} className="invoice-card">
+                    <div className="invoice-header">
+                        <h3>Facture #{invoice.id}</h3>
                         <p>Date : {invoice.date}</p>
-                        <p>Montant HT : {invoice.totalHT} €</p>
-                        <p>Montant TTC : {invoice.totalTTC} €</p>
-                        <button>Télécharger la facture</button>
-                    </li>
-                ))}
-            </ul>
+                    </div>
+                    <div className="invoice-details">
+                        <p><strong>Client :</strong> {invoice.client.nom}</p>
+                        <p><strong>Adresse :</strong> {invoice.client.adresse}</p>
+                        <p><strong>Total HT :</strong> {invoice.totalHT} €</p>
+                        <p><strong>Total TTC :</strong> {invoice.totalTTC} €</p>
+                        <p><strong>TVA :</strong> {invoice.TVA} €</p>
+                    </div>
+                    <div className="invoice-footer">
+                        <button className="download-btn">
+                            <i className="fa fa-download"></i> Télécharger la facture
+                        </button>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };

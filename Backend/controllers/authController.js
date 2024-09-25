@@ -1,11 +1,10 @@
-// authController.js
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 // Inscription
 exports.register = async (req, res) => {
-    const { email, password, firstName, lastName, address } = req.body;
+    const { email, password, firstName, lastName, address, role } = req.body;
 
     try {
         // Vérifier si l'utilisateur existe déjà
@@ -17,7 +16,7 @@ exports.register = async (req, res) => {
         // Hasher le mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Créer un nouvel utilisateur
+        // Créer un nouvel utilisateur avec un rôle (par défaut 'user' si non spécifié)
         const newUser = await User.create({
             email,
             Mot_de_passe: hashedPassword,
@@ -25,6 +24,7 @@ exports.register = async (req, res) => {
             Prenom: lastName,
             Adresse: address,
             Date_inscription: new Date(),
+            role: role || 'user'  // Rôle par défaut : 'user'
         });
 
         res.status(201).json({ message: 'Inscription réussie.', user: newUser });
@@ -50,8 +50,8 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Mot de passe incorrect.' });
         }
 
-        // Créer un token JWT
-        const token = jwt.sign({ id: user.ID_Utilisateur, email: user.email }, 'secret_key', { expiresIn: '1h' });
+        // Créer un token JWT incluant le rôle de l'utilisateur
+        const token = jwt.sign({ id: user.ID_Utilisateur, email: user.email, role: user.role }, 'secret_key', { expiresIn: '1h' });
 
         res.json({
             message: 'Connexion réussie.',
@@ -62,19 +62,27 @@ exports.login = async (req, res) => {
     }
 };
 
-// Authentification avec JWT
+// Middleware d'authentification avec JWT
 exports.authenticate = (req, res, next) => {
     const token = req.headers['authorization'];
     if (!token) {
         return res.status(401).json({ message: 'Token non fourni.' });
     }
 
-    jwt.verify(token, 'secret_key', (err, decoded) => {
+    jwt.verify(token.split(' ')[1], 'secret_key', (err, decoded) => {
         if (err) {
             return res.status(403).json({ message: 'Token invalide.' });
         }
 
-        req.user = decoded;
+        req.user = decoded;  // Stocker les informations décodées dans req.user
         next();
     });
+};
+
+// Middleware pour vérifier si l'utilisateur est admin
+exports.isAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Accès interdit : Administrateur requis.' });
+    }
+    next();
 };

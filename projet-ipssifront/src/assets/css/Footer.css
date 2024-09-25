@@ -1,55 +1,56 @@
-/* Style du footer */
+/* Conteneur principal du footer */
 .footer {
     background-color: #333;
     color: white;
-    padding: 20px;
+    padding: 20px 0;
     text-align: center;
-    border-top: 2px solid #555;
-    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1); /* Effet d'ombre subtile pour le design */
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Texte de copyright */
 .footer p {
     margin: 0;
-    font-size: 1rem; /* Légèrement agrandi pour une meilleure lisibilité */
-    color: #ccc; /* Couleur plus douce pour le texte */
+    padding-bottom: 10px;
+    font-size: 14px;
+    color: #ccc;
 }
 
+/* Conteneur des liens du footer */
 .footer-links {
-    margin-top: 15px;
     display: flex;
     justify-content: center;
-    gap: 20px; /* Ajout d'espace entre les liens */
+    gap: 30px; /* Espace entre chaque lien */
+    margin-top: 10px;
 }
 
+/* Style pour les liens du footer */
 .footer-links a {
-    color: white;
-    font-size: 0.95rem;
     text-decoration: none;
-    padding: 5px 10px;
-    transition: color 0.3s ease, transform 0.3s ease; /* Effet de transition fluide */
+    color: #fff;
+    font-size: 16px;
+    transition: color 0.3s ease;
 }
 
+/* Effet hover sur les liens */
 .footer-links a:hover {
-    color: #007bff;
-    transform: scale(1.1); /* Agrandissement subtil lors du survol */
+    color: #007bff; /* Change la couleur au survol */
 }
 
-/* Responsivité pour petits écrans */
-@media (max-width: 768px) {
-    .footer {
-        padding: 15px 10px;
-    }
-
+/* Réglage des styles pour les petits écrans */
+@media (max-width: 600px) {
     .footer-links {
         flex-direction: column;
-        gap: 10px; /* Espacement vertical pour mobile */
+        gap: 15px; /* Espacement réduit sur mobile */
     }
 
     .footer p {
-        font-size: 0.85rem;
+        font-size: 12px;
     }
 
     .footer-links a {
-        font-size: 0.9rem;
+        font-size: 14px;
     }
 }

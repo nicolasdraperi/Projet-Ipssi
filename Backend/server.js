@@ -7,6 +7,12 @@ const User = require('./models/User'); // Modèle Sequelize pour les utilisateur
 const multer = require('multer'); // Pour l'upload de fichiers
 const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
+const File = require('./models/File');
+
+
+
+
+
 
 // Importer le middleware de vérification du token
 const verifyToken = require('./middleware/verifyToken');
@@ -171,7 +177,10 @@ app.use((err, req, res, next) => {
     console.error('Erreur non gérée:', err.stack);
     res.status(500).send('Erreur serveur');
 });
-
+// definition relations entres les models file et user 
+// Définir les relations entre les modèles
+User.hasMany(File, { foreignKey: 'ID_Utilisateur' });
+File.belongsTo(User, { foreignKey: 'ID_Utilisateur' });
 // Démarrer le serveur
 const PORT = 5000;
 app.listen(PORT, () => {

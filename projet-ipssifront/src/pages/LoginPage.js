@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import '../assets/css/AuthPage.css';
 
-const LoginPage = ({ onLogin }) => {  // Ajoute "onLogin" comme prop
+const LoginPage = ({ setIsAuthenticated, onLogin }) => {  // Ajoute "onLogin" comme prop
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -17,6 +17,7 @@ const LoginPage = ({ onLogin }) => {  // Ajoute "onLogin" comme prop
                 email,
                 password
             });
+            console.log('Réponse du serveur:', response); // Ajoute ceci pour voir la réponse
     
             const token = response.data.token;
             if (token) {
@@ -24,6 +25,7 @@ const LoginPage = ({ onLogin }) => {  // Ajoute "onLogin" comme prop
                 console.log('Token stocké dans le localStorage:', token);  // Ajout d'un log pour vérifier le stockage
                 setSuccess('Connexion réussie !');
                 setError('');
+                setIsAuthenticated(true);
                 onLogin();  // Appelle la fonction pour mettre à jour isAuthenticated
                 navigate('/dashboard');
             } else {
@@ -31,6 +33,7 @@ const LoginPage = ({ onLogin }) => {  // Ajoute "onLogin" comme prop
             }
         } catch (err) {
             setError('Erreur lors de la connexion');
+            console.error('Erreur:', err.response ? err.response.data : err.message); // Log plus détaillé de l'erreur
         }
     };
     

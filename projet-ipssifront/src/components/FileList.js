@@ -39,17 +39,47 @@ const FileList = () => {
         }
     };
 
+    // Fonction pour déterminer si un fichier est une image
+    const isImageFile = (fileName) => {
+        return /\.(jpeg|jpg|png|gif)$/i.test(fileName);
+    };
+
     return (
         <div>
             <h3>Mes fichiers</h3>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <ul>
-                {files.map((file) => (
-                    <li key={file.id}>
-                        {file.name} - {(file.size / 1024 / 1024).toFixed(2)} Mo
-                        <button onClick={() => handleDelete(file.id)}>Supprimer</button>
-                    </li>
-                ))}
+                {files.length > 0 ? (
+                    files.map((file, index) => {
+                        const uniqueKey = file.id || file.name || index; // Utilisation d'une clé unique
+                        return (
+                            <li key={uniqueKey}>  {/* Utilisation de la clé unique */}
+                                {/* Nom du fichier et taille */}
+                                <strong>{file.name}</strong> - {(file.size / 1024 / 1024).toFixed(2)} Mo
+
+                                {/* Prévisualisation si c'est une image */}
+                                {isImageFile(file.name) ? (
+                                    <div>
+                                        <img 
+                                            src={file.url} 
+                                            alt={file.name} 
+                                            style={{ width: '100px', height: 'auto' }} 
+                                        />
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <a href={file.url} target="_blank" rel="noopener noreferrer">Visualiser le fichier</a>
+                                    </div>
+                                )}
+
+                                {/* Bouton pour supprimer le fichier */}
+                                <button onClick={() => handleDelete(file.id)}>Supprimer</button>
+                            </li>
+                        );
+                    })
+                ) : (
+                    <p>Aucun fichier disponible.</p>
+                )}
             </ul>
 
             {/* Pagination */}

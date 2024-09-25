@@ -45,11 +45,18 @@ const FileUpload = () => {
 
         try {
             console.log("Début de l'upload du fichier...");
+                     // Récupère le token JWT depuis le localStorage
+                     const token = localStorage.getItem('token');
+                     if (!token) {
+                         setMessage('Token manquant. Veuillez vous reconnecter.');
+                         return;
+                     }
 
           // Utiliser l'URL correcte pour l'upload
           await axios.post('http://localhost:5000/api/files/upload', formData, { // URL corrigée ici
             headers: {
                 'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`  // Ajout du token JWT dans l'en-tête
             },
             onUploadProgress: (progressEvent) => {
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);

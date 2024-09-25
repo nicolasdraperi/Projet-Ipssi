@@ -1,21 +1,22 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware pour vérifier le JWT et authentifier l'utilisateur
+// Middleware pour vérifier le JWT
 const verifyToken = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) {
-        return res.status(403).json({ message: 'Accès non autorisé. Token manquant.' });
+    const authHeader = req.headers['authorization'];
+    
+    if (!authHeader) {
+        return res.status(403).json({ message: 'Token manquant, accès refusé.' });
     }
 
-    // Vérifier le token
+    const token = authHeader.split(' ')[1];  // Supprime "Bearer " pour obtenir uniquement le token
+
     jwt.verify(token, 'secret', (err, decoded) => {
         if (err) {
             return res.status(401).json({ message: 'Token invalide.' });
         }
 
-        // Stocke l'ID de l'utilisateur dans req.userId
-        req.userId = decoded.id;
-        next();  // Passer à l'étape suivante
+        req.userId = decoded.id;  // Stocke l'ID de l'utilisateur dans la requête pour l'utiliser dans les routes
+        next();  // Continue vers la route suivante
     });
 };
 

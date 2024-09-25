@@ -29,7 +29,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }
+    limits: { fileSize: 5 * 1024 * 1024 }  // Limite à 5 Mo
 });
 
 // Route pour uploader un fichier
@@ -40,15 +40,39 @@ router.post('/upload', upload.single('file'), (req, res) => {
     res.json({ message: 'Fichier uploadé avec succès.', file: req.file });
 });
 
-// Route pour récupérer la liste des fichiers
+// Route pour récupérer la liste des fichiers avec pagination
 router.get('/', (req, res) => {
-    // Logique pour récupérer la liste des fichiers de l'utilisateur
     const filesDirectory = path.join(__dirname, '../uploads');
+    
+    const page = parseInt(req.query.page) || 1;  // Numéro de page, par défaut 1
+    const limit = 5;  // Nombre de fichiers par page
+    const startIndex = (page - 1) * limit;  // Point de départ pour la pagination
+
+    // Lire le dossier des fichiers
     fs.readdir(filesDirectory, (err, files) => {
         if (err) {
             return res.status(500).json({ error: 'Erreur lors de la récupération des fichiers.' });
         }
-        res.json({ files });
+
+        // Pagination : récupérer un sous-ensemble de fichiers
+        const paginatedFiles = files.slice(startIndex, startIndex + limit);
+        const totalPages = Math.ceil(files.length / limit);  // Calculer le nombre total de pages
+
+        // Retourner les informations nécessaires
+        res.json({ 
+            files: paginatedFiles.map((file, index) => {
+                const filePath = path.join(filesDirectory, file);
+                const fileSize = fs.statSync(filePath).size;
+
+                return {
+                    id: index + startIndex,  // Générer un ID fictif (pour l'UI frontend)
+                    name: file,
+                    size: fileSize,
+                    url: `http://localhost:5000/uploads/${file}`  // URL d'accès pour afficher ou télécharger le fichier
+                };
+            }), 
+            totalPages  // Retourner le nombre total de pages
+        });
     });
 });
 

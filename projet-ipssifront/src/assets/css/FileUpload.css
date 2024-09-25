@@ -1,0 +1,110 @@
+/* Conteneur principal centré */
+.container-upload-fichier {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 40px auto;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Titre stylisé */
+h3 {
+    font-family: 'Arial', sans-serif;
+    font-size: 1.6rem;
+    color: #444;
+    margin-bottom: 20px;
+}
+
+/* Input file modernisé */
+input[type="file"] {
+    padding: 10px;
+    font-size: 16px;
+    color: #333;
+    background-color: #f5f5f5;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+}
+
+/* Effet de survol pour l'input */
+input[type="file"]:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Bouton de soumission modernisé */
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    max-width: 250px;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+/* Style pour la barre de progression */
+.progression-upload {
+    margin-top: 20px;
+    width: 100%;
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.progression-upload div {
+    height: 100%;
+    background-color: #28a745;
+    width: 0;
+    transition: width 0.4s ease;
+}
+
+/* Messages d'erreur et de succès */
+.message-erreur, .message-succes {
+    margin-top: 20px;
+    font-size: 14px;
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+.message-erreur {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.message-succes {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+/* Animation hover pour le conteneur principal */
+.container-upload-fichier:hover {
+    background-color: #e6e6fa;
+}

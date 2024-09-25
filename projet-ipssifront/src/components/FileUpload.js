@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import '../assets/css/FileUpload.css';
+
 
 const FileUpload = () => {
     const [file, setFile] = useState(null);
@@ -76,12 +78,26 @@ const FileUpload = () => {
     };
 
     return (
-        <div>
+        <div className="container-upload-fichier">
             <h3>Uploader un fichier</h3>
-            <input type="file" onChange={handleFileChange} />
+
+            {/* Bouton personnalisé pour l'input type file */}
+            <label htmlFor="file-upload" className="label-file">Choisir un fichier</label>
+            <input id="file-upload" type="file" onChange={handleFileChange} />
+
             <button onClick={handleUpload}>Uploader</button>
-            {uploadProgress > 0 && <p>Progression : {uploadProgress}%</p>}
-            {message && <p>{message}</p>}
+
+            {uploadProgress > 0 && (
+                <div className="progression-upload">
+                    <div style={{ width: `${uploadProgress}%` }}></div>
+                </div>
+            )}
+
+            {message && (
+                <p className={message.includes('succès') ? 'message-succes' : 'message-erreur'}>
+                    {message}
+                </p>
+            )}
         </div>
     );
 };

@@ -8,6 +8,9 @@ const multer = require('multer'); // Pour l'upload de fichiers
 const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
 
+// Importer le middleware de vérification du token
+const verifyToken = require('./middleware/verifyToken');
+
 const app = express();
 app.use(express.json()); // Middleware pour gérer les requêtes avec du JSON
 
@@ -92,12 +95,22 @@ app.post('/api/login', async (req, res) => {
 // Configuration de multer pour gérer les fichiers uploadés
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        // Récupère l'ID utilisateur depuis le token JWT
+        const userId = req.userId;  // Stocké par le middleware `verifyToken`
+        const userDirectoryPath = path.join(__dirname, 'uploads', String(userId));
+
+        // Crée le dossier utilisateur s'il n'existe pas encore
+        if (!fs.existsSync(userDirectoryPath)) {
+            fs.mkdirSync(userDirectoryPath, { recursive: true });
+        }
+
+        cb(null, userDirectoryPath);  // Enregistre les fichiers dans le dossier de l'utilisateur
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname); // Nomme le fichier avec un horodatage
+        cb(null, Date.now() + '-' + file.originalname);  // Ajoute un horodatage au nom du fichier
     }
 });
+
 
 const fileFilter = (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
@@ -115,8 +128,8 @@ const upload = multer({
 });
 
 // Route pour uploader un fichier
-app.post('/api/files/upload', upload.single('file'), (req, res) => {
-    console.log('Requête d\'upload reçue');  // Log pour vérifier que la route est atteinte
+app.post('/api/files/upload', verifyToken, upload.single('file'), (req, res) => {
+    console.log('Requête d\'upload reçue');
     if (!req.file) {
         console.log('Aucun fichier reçu ou type de fichier non valide');
         return res.status(400).json({ message: 'Aucun fichier sélectionné ou type de fichier non valide.' });
@@ -124,22 +137,24 @@ app.post('/api/files/upload', upload.single('file'), (req, res) => {
     console.log('Fichier uploadé avec succès :', req.file);
     res.json({ message: 'Fichier uploadé avec succès.', file: req.file });
 });
-// Route pour récupérer la liste des fichiers
-app.get('/api/files', (req, res) => {
-    const directoryPath = path.join(__dirname, 'uploads');
+// Route pour récupérer la liste des fichiers de l'utilisateur
+app.get('/api/files', verifyToken, (req, res) => {
+    const userId = req.userId;  // Utilisateur authentifié
+    const userDirectoryPath = path.join(__dirname, 'uploads', String(userId));
 
-    fs.readdir(directoryPath, (err, files) => {
+    // Lire les fichiers dans le dossier de l'utilisateur
+    fs.readdir(userDirectoryPath, (err, files) => {
         if (err) {
             return res.status(500).json({ message: 'Erreur lors de la récupération des fichiers.' });
         }
-
         res.json({ files });
     });
 });
 
 // Route pour supprimer un fichier
-app.delete('/api/files/:fileName', (req, res) => {
-    const filePath = path.join(__dirname, 'uploads', req.params.fileName);
+app.delete('/api/files/:fileName', verifyToken, (req, res) => {
+    const userId = req.userId;
+    const filePath = path.join(__dirname, 'uploads', String(userId), req.params.fileName);
 
     fs.unlink(filePath, (err) => {
         if (err) {

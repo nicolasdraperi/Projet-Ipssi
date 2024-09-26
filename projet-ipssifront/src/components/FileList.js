@@ -29,6 +29,9 @@ const FileList = () => {
     }, [page]);
 
     const handleDelete = async (fileId) => {
+        console.log(files);  // Assurez-vous que "file.id" est bien défini
+
+        console.log('ID du fichier à supprimer:', fileId); // Ajout du log pour vérifier l'ID
         try {
             await axios.delete(`http://localhost:5000/api/files/${fileId}`, {
                 headers: {
@@ -63,7 +66,7 @@ const FileList = () => {
                         return (
                             <li key={uniqueKey} className="file-item">
                                 <div className="file-info">
-                                    <strong>{file.name}</strong> - {(file.size / 1024 / 1024).toFixed(2)} Mo
+                                    <strong>{file}</strong> - {(file.size / 1024 / 1024).toFixed(2)} Mo
                                     <p>Date de téléchargement : {new Date(file.uploadDate).toLocaleDateString()}</p>
                                 </div>
 

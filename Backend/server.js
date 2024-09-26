@@ -134,16 +134,34 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // Limite à 5 Mo
 });
 
-// Route pour uploader un fichier
-app.post('/api/files/upload', verifyToken, upload.single('file'), (req, res) => {
+// Route pour uploader un fichier et l'enregistrer dans la base de données
+app.post('/api/files/upload', verifyToken, upload.single('file'), async (req, res) => {
     console.log('Requête d\'upload reçue');
+    
     if (!req.file) {
         console.log('Aucun fichier reçu ou type de fichier non valide');
         return res.status(400).json({ message: 'Aucun fichier sélectionné ou type de fichier non valide.' });
     }
+
     console.log('Fichier uploadé avec succès :', req.file);
-    res.json({ message: 'Fichier uploadé avec succès.', file: req.file });
+
+    try {
+        // Enregistrer le fichier dans la base de données
+        const newFile = await File.create({
+            Nom_fichier: req.file.filename,
+            Taille: req.file.size,
+            ID_Utilisateur: req.userId, // Assurez-vous que verifyToken définit bien req.userId
+            Date_upload: new Date()
+        });
+
+        // Répondre avec succès et les informations sur le fichier enregistré
+        res.json({ message: 'Fichier uploadé et enregistré avec succès.', file: newFile });
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement du fichier dans la base de données :', error);
+        res.status(500).json({ message: 'Erreur lors de l\'enregistrement du fichier dans la base de données.' });
+    }
 });
+
 // Route pour récupérer la liste des fichiers de l'utilisateur
 app.get('/api/files', verifyToken, (req, res) => {
     const userId = req.userId;  // Utilisateur authentifié

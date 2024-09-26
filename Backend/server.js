@@ -172,7 +172,19 @@ app.get('/api/files', verifyToken, (req, res) => {
         if (err) {
             return res.status(500).json({ message: 'Erreur lors de la récupération des fichiers.' });
         }
-        res.json({ files });
+
+        const fileList = files.map(file => {
+            const filePath = path.join(userDirectoryPath, file);
+            const stats = fs.statSync(filePath);  // Récupérer les informations sur chaque fichier
+            return {
+                name: file,
+                size: stats.size,  // Taille du fichier
+                uploadDate: stats.birthtime,  // Date d'upload du fichier
+                url: `http://localhost:5000/uploads/${userId}/${file}`  // URL du fichier
+            };
+        });
+
+        res.json({ files: fileList });  // Renvoyer les informations des fichiers en tant qu'objets JSON
     });
 });
 

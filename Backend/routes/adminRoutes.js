@@ -10,4 +10,6 @@ router.delete('/admin/users/:userId', verifyToken, isAdmin, adminController.dele
 router.get('/admin/stats', verifyToken, isAdmin, adminController.getStats);
 router.get('/admin/invoices/:userId', verifyToken, isAdmin, adminController.getInvoicesByUser);
 
+router.post('/admin/change-role', verifyToken, isAdmin, adminController.changeUserRole);
+
 module.exports = router;

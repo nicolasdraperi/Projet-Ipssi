@@ -9,6 +9,7 @@ import AccountManagement from './pages/AccountManagement';  // Import de la page
 import MentionsLegales from './pages/MentionsLegales';  // Importez la page Mentions légales
 import SettingsPage from './pages/SettingsPage';  // Assurez-vous que le chemin est correct
 
+
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 

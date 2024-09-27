@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import localforage from 'localforage';
 import '../assets/css/SettingsPage.css';
 
 const SettingsPage = () => {
@@ -6,20 +7,23 @@ const SettingsPage = () => {
     const [language, setLanguage] = useState('fr');
 
     useEffect(() => {
-        const storedTheme = localStorage.getItem('theme');
-        const storedLanguage = localStorage.getItem('language');
-        
-        if (storedTheme) setTheme(storedTheme);
-        if (storedLanguage) setLanguage(storedLanguage);
+        // Récupération des paramètres depuis localforage
+        localforage.getItem('theme').then((storedTheme) => {
+            if (storedTheme) setTheme(storedTheme);
+        });
+        localforage.getItem('language').then((storedLanguage) => {
+            if (storedLanguage) setLanguage(storedLanguage);
+        });
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('theme', theme);
-        localStorage.setItem('language', language);
+        // Sauvegarde des paramètres dans localforage
+        localforage.setItem('theme', theme);
+        localforage.setItem('language', language);
     }, [theme, language]);
 
     const resetSettings = () => {
-        localStorage.clear();
+        localforage.clear();
         setTheme('light');
         setLanguage('fr');
     };

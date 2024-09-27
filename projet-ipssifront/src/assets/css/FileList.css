@@ -1,0 +1,81 @@
+.file-item {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(240, 240, 240, 0.5)); /* Dégradé doux */
+    -webkit-backdrop-filter: blur(15px); /* Effet de flou plus subtil */
+    backdrop-filter: blur(10px);
+    border-radius: 20px; /* Coins plus arrondis pour un look plus organique */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.05); /* Ombres douces et légères */
+    
+    padding: 30px; /* Espacement plus généreux */
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    /* Ajout de bordures fines pour éviter l'effet de boîte dans boîte */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.file-item:hover {
+    transform: translateY(-8px); /* Mise en avant plus visible au survol */
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Informations du fichier */
+.file-info {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #444; /* Couleur plus douce et moderne */
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Prévisualisation */
+.file-preview {
+    margin-bottom: 20px;
+}
+
+.file-image {
+    width: 120px;
+    height: auto;
+    border-radius: 12px; /* Coins plus arrondis */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Ombre subtile sur l'image */
+}
+
+/* Bouton de visualisation */
+.file-view-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 50px; /* Bouton plus arrondi pour un look moderne */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Ombre douce */
+}
+
+.file-view-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05); /* Mise en avant douce au survol */
+}
+
+/* Bouton de suppression */
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 50px; /* Arrondi similaire au bouton de vue */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.05);
+}

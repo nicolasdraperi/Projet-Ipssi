@@ -1,0 +1,107 @@
+.container-upload-fichier {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 50px auto;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.container-upload-fichier:hover {
+    background-color: #f0f8ff;
+    transform: translateY(-5px);
+}
+
+h3 {
+    font-family: 'Arial', sans-serif;
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 25px;
+    font-weight: bold;
+    text-align: center;
+}
+
+input[type="file"] {
+    padding: 12px;
+    font-size: 1rem;
+    color: #333;
+    background-color: #f0f0f0;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+}
+
+input[type="file"]:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    font-size: 1.1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+.progression-upload {
+    margin-top: 25px;
+    width: 100%;
+    height: 25px;
+    background-color: #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+.progression-upload div {
+    height: 100%;
+    background-color: #28a745;
+    width: 0;
+    transition: width 0.4s ease;
+}
+
+.message-erreur, .message-succes {
+    margin-top: 25px;
+    font-size: 1rem;
+    padding: 15px;
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.message-erreur {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.message-succes {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}

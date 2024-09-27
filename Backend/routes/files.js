@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const File = require('../models/File'); // Modèle Sequelize pour gérer les fichiers
 
 const router = express.Router();
 
@@ -33,11 +34,25 @@ const upload = multer({
 });
 
 // Route pour uploader un fichier
-router.post('/upload', upload.single('file'), (req, res) => {
+router.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'Aucun fichier sélectionné ou type de fichier non valide.' });
     }
-    res.json({ message: 'Fichier uploadé avec succès.', file: req.file });
+
+    try {
+        // Enregistrer les informations du fichier dans la base de données
+        const newFile = await File.create({
+            Nom_fichier: req.file.filename,
+            Taille: req.file.size,
+            Date_upload: new Date(),
+            // Ajouter d'autres colonnes en fonction de votre modèle, comme l'ID utilisateur si nécessaire
+        });
+
+        res.json({ message: 'Fichier uploadé et enregistré avec succès.', file: newFile });
+    } catch (error) {
+        console.error('Erreur lors de l\'insertion dans la base de données', error);
+        res.status(500).json({ error: 'Erreur lors de l\'enregistrement du fichier dans la base de données.' });
+    }
 });
 
 // Route pour récupérer la liste des fichiers avec pagination

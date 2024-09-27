@@ -13,6 +13,9 @@ exports.uploadFile = async (req, res) => {
     }
 
     try {
+        console.log('Fichier reçu:', req.file);
+        console.log('Début de l\'upload du fichier:', req.file);
+
         // Ajouter le fichier dans la base de données avec Sequelize
         const newFile = await File.create({
             Nom_fichier: req.file.filename,  // Nom du fichier uploadé
@@ -20,6 +23,7 @@ exports.uploadFile = async (req, res) => {
             ID_Utilisateur: req.body.userId || 1,  // Utilisateur par défaut ou utilisateur spécifié
             Date_upload: new Date()  // Date actuelle pour le téléchargement
         });
+        console.log('Fichier enregistré dans la base de données:', newFile);
 
         // Répondre avec succès et les informations du fichier
         res.status(200).json({
@@ -52,6 +56,7 @@ exports.getFiles = async (req, res) => {
             console.log(`Aucun fichier trouvé pour l'utilisateur ${userId}`);
             return res.status(404).json({ message: "Aucun fichier trouvé pour cet utilisateur." });
         }
+        console.log(file.ID_Fichier);  // Vérifiez que l'ID est bien défini
 
         // Construire la réponse avec les informations complètes pour chaque fichier
         const filesData = userFiles.map(file => {
@@ -86,25 +91,30 @@ exports.deleteFile = async (req, res) => {
     const { fileId } = req.params;  // Récupérer l'ID du fichier à partir des paramètres de la requête
 
     try {
+        console.log(`Suppression du fichier avec ID : ${fileId}`);
         // Utiliser Sequelize pour trouver le fichier par son ID
         const file = await File.findByPk(fileId);
 
         // Si le fichier n'existe pas, renvoyer une erreur 404
         if (!file) {
+            console.log('Fichier non trouvé:', fileId);
             return res.status(404).json({ message: "Fichier non trouvé." });
         }
 
         // Supprimer le fichier du système de fichiers
         const filePath = path.join(__dirname, '../uploads', file.Nom_fichier);
+        console.log('Chemin du fichier à supprimer:', filePath)
         fs.unlink(filePath, (err) => {
             if (err) {
                 console.error('Erreur lors de la suppression du fichier physique', err);
                 return res.status(500).json({ message: 'Erreur lors de la suppression du fichier.' });
             }
+            console.log('Fichier physique supprimé:', filePath);
         });
 
         // Supprimer le fichier de la base de données avec Sequelize
         await file.destroy();
+        console.log('Fichier supprimé de la base de données:', fileId);
 
         // Répondre avec succès et renvoyer les informations sur le fichier supprimé
         res.status(200).json({ message: "Fichier supprimé avec succès", file: file });

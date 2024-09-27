@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ConfirmModal from './ConfirmModal'; // Importer la modal personnalisée
 import '../assets/css/FileList.css';  // Import du fichier CSS
 
 const FileList = () => {
@@ -7,6 +8,8 @@ const FileList = () => {
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);  // Pagination - Page actuelle
     const [totalPages, setTotalPages] = useState(1);  // Nombre total de pages
+    const [showModal, setShowModal] = useState(false); // État pour la modal de confirmation
+    const [fileToDelete, setFileToDelete] = useState(null); // Stocker le fichier à supprimer
 
     useEffect(() => {
         const fetchFiles = async () => {
@@ -16,11 +19,9 @@ const FileList = () => {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
                 });
-                console.log(response.data);  // Afficher les données des fichiers dans la console
                 setFiles(response.data.files);
                 setTotalPages(response.data.totalPages); // Nombre total de pages
             } catch (error) {
-                console.error('Erreur lors de la récupération des fichiers', error);
                 setError('Erreur lors du chargement des fichiers.');
             }
         };
@@ -28,17 +29,25 @@ const FileList = () => {
         fetchFiles();
     }, [page]);
 
-    const handleDelete = async (fileId) => {
+    // Fonction pour gérer la suppression après confirmation
+    const handleDelete = async () => {
         try {
-            await axios.delete(`http://localhost:5000/api/files/${fileId}`, {
+            await axios.delete(`http://localhost:5000/api/files/${fileToDelete}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
-            setFiles(files.filter(file => file.id !== fileId)); // Mise à jour de l'interface utilisateur
+            setFiles(files.filter(file => file.name !== fileToDelete)); // Suppression locale du fichier
+            setShowModal(false); // Fermer la modal après suppression
         } catch (error) {
             setError('Erreur lors de la suppression du fichier.');
         }
+    };
+
+    // Fonction pour ouvrir la modal
+    const openConfirmModal = (fileName) => {
+        setFileToDelete(fileName); // Définir le fichier à supprimer
+        setShowModal(true); // Ouvrir la modal
     };
 
     // Fonction pour déterminer si un fichier est une image
@@ -64,7 +73,7 @@ const FileList = () => {
                             <li key={uniqueKey} className="file-item">
                                 <div className="file-info">
                                     <strong>{file.name}</strong> - {(file.size / 1024 / 1024).toFixed(2)} Mo
-                                    <p>Date de téléchargement : {new Date(file.uploadDate).toLocaleDateString()}</p>
+                                    <p>Date de téléchargement : {new Date(file.uploadDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                                 </div>
 
                                 <div className="file-preview">
@@ -77,7 +86,7 @@ const FileList = () => {
                                     )}
                                 </div>
 
-                                <button className="delete-btn" onClick={() => handleDelete(file.id)}>Supprimer</button>
+                                <button className="delete-btn" onClick={() => openConfirmModal(file.name)}>Supprimer</button>
                             </li>
                         );
                     })
@@ -101,6 +110,13 @@ const FileList = () => {
                     ))}
                 </div>
             )}
+
+            {/* Modal de confirmation */}
+            <ConfirmModal 
+                show={showModal} 
+                onConfirm={handleDelete} 
+                onCancel={() => setShowModal(false)} 
+            />
         </div>
     );
 };

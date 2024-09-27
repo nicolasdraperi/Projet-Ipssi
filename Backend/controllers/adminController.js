@@ -132,3 +132,61 @@ exports.changeUserRole = async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la mise à jour du rôle.', error });
     }
 };
+
+// =================================
+// 7. Supprimer un utilisateur (admin only)
+// =================================
+
+exports.DeleteUser = async (req, res) => {
+    const { userId } = req.body;
+
+    try {
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User non trouvé.' });
+        }
+
+        await user.destroy();
+        res.json({ message: `User ${userId} has été supprimé.` });
+    } catch (error) {
+        console.error('Erreur durant la suppression:', error);
+        res.status(500).json({ message: 'Erreur durant la suppression:' });
+    }
+};
+
+// =================================
+// 8. Obtenir toutes les statistique (admin only)
+// =================================
+exports.getStats = async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: ['ID_Utilisateur', 'Nom', 'Prenom', 'Email', 'role'],
+            include: [{
+                model: File,
+                attributes: [
+                    [sequelize.fn('COUNT', sequelize.col('Files.ID_Fichier')), 'fileCount'],
+                    [sequelize.fn('SUM', sequelize.col('Files.Taille')), 'totalSize']
+                ]
+            }],
+            group: ['User.ID_Utilisateur']  
+        });
+        const userData = users.map(user => {
+            const fileData = user.Files[0] ? user.Files[0].dataValues : { fileCount: 0, totalSize: 0 };
+            return {
+                id: user.ID_Utilisateur,
+                name: user.Nom,
+                surname: user.Prenom,
+                email: user.Email,
+                role: user.role,
+                fileCount: fileData.fileCount || 0, 
+                totalSize: fileData.totalSize || 0   
+            };
+        });
+
+        res.json(userData);
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
+    }
+};

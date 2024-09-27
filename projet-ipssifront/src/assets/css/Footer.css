@@ -8,6 +8,7 @@
     bottom: 0;
     width: 100%;
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100;
 }
 
 /* Texte de copyright */
@@ -16,12 +17,14 @@
     padding-bottom: 10px;
     font-size: 14px;
     color: #ccc;
+    line-height: 1.6;
 }
 
 /* Conteneur des liens du footer */
 .footer-links {
     display: flex;
     justify-content: center;
+    align-items: center; /* Centrage vertical des liens */
     gap: 30px; /* Espace entre chaque lien */
     margin-top: 10px;
 }
@@ -31,12 +34,14 @@
     text-decoration: none;
     color: #fff;
     font-size: 16px;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, transform 0.2s ease; /* Ajout de transition sur la couleur et transformation */
+    font-weight: 500;
 }
 
 /* Effet hover sur les liens */
 .footer-links a:hover {
     color: #007bff; /* Change la couleur au survol */
+    transform: scale(1.05); /* Légère mise en avant au survol */
 }
 
 /* Réglage des styles pour les petits écrans */

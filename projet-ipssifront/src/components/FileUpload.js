@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import '../assets/css/FileUpload.css'; // Assurez-vous que le chemin est correct
 
 const FileUpload = () => {
     const [file, setFile] = useState(null);
+    const [preview, setPreview] = useState(null); // État pour stocker l'URL de prévisualisation
     const [uploadProgress, setUploadProgress] = useState(0);
     const [message, setMessage] = useState('');
 
@@ -10,33 +12,35 @@ const FileUpload = () => {
         const selectedFile = e.target.files[0];
         setFile(selectedFile);
 
-        // Debugging: afficher les informations sur le fichier sélectionné
-        console.log("Fichier sélectionné :");
-        console.log("Nom :", selectedFile.name);
-        console.log("Type :", selectedFile.type);
-        console.log("Taille :", (selectedFile.size / 1024 / 1024).toFixed(2), "Mo");
+        // Gérer la prévisualisation des images et des PDF
+        if (selectedFile) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setPreview(event.target.result); // Crée une URL de prévisualisation du fichier
+            };
+            reader.readAsDataURL(selectedFile); // Crée une URL pour l'image ou le PDF
+        } else {
+            setPreview(null);
+        }
+
+        console.log("Fichier sélectionné :", selectedFile.name);
     };
 
     const handleUpload = async () => {
         if (!file) {
             setMessage('Veuillez sélectionner un fichier.');
-            console.log("Aucun fichier sélectionné.");
             return;
         }
 
-        // Validation du type de fichier (seuls JPEG, PNG et PDF sont acceptés)
         const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
         if (!allowedTypes.includes(file.type)) {
             setMessage('Type de fichier non valide. Seuls les fichiers JPEG, PNG et PDF sont acceptés.');
-            console.log("Erreur de type de fichier :", file.type);
             return;
         }
 
-        // Validation de la taille de fichier (limite de 5 Mo)
         const maxSize = 5 * 1024 * 1024; // 5 Mo
         if (file.size > maxSize) {
             setMessage('Le fichier dépasse la taille maximale autorisée de 5 Mo.');
-            console.log("Erreur de taille de fichier :", (file.size / 1024 / 1024).toFixed(2), "Mo");
             return;
         }
 
@@ -44,44 +48,61 @@ const FileUpload = () => {
         formData.append('file', file);
 
         try {
-            console.log("Début de l'upload du fichier...");
-                     // Récupère le token JWT depuis le localStorage
-                     const token = localStorage.getItem('token');
-                     if (!token) {
-                         setMessage('Token manquant. Veuillez vous reconnecter.');
-                         return;
-                     }
-
-          // Utiliser l'URL correcte pour l'upload
-          await axios.post('http://localhost:5000/api/files/upload', formData, { // URL corrigée ici
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'Authorization': `Bearer ${token}`  // Ajout du token JWT dans l'en-tête
-            },
-            onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                setUploadProgress(percentCompleted);
-
-                // Debugging: afficher la progression
-                console.log("Progression de l'upload :", percentCompleted, "%");
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setMessage('Token manquant. Veuillez vous reconnecter.');
+                return;
             }
-        });
 
-            console.log("Fichier uploadé avec succès !");
+            await axios.post('http://localhost:5000/api/files/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setUploadProgress(percentCompleted);
+                }
+            });
+
             setMessage('Fichier uploadé avec succès !');
         } catch (error) {
-            console.error('Erreur lors de l\'upload du fichier :', error);
             setMessage('Erreur lors de l\'upload.');
         }
     };
 
     return (
-        <div>
+        <div className="container-upload-fichier">
             <h3>Uploader un fichier</h3>
-            <input type="file" onChange={handleFileChange} />
+
+            {/* Label pour choisir un fichier */}
+            <label htmlFor="file-upload" className="label-file">Choisir un fichier</label>
+            <input id="file-upload" type="file" onChange={handleFileChange} />
+
+            {/* Prévisualisation du fichier sélectionné */}
+            {preview && (
+                <div className="preview-container">
+                    {file.type.includes('image') ? (
+                        <img src={preview} alt="Prévisualisation" className="preview-image" />
+                    ) : (
+                        <embed src={preview} type={file.type} width="300" height="400" />
+                    )}
+                </div>
+            )}
+
             <button onClick={handleUpload}>Uploader</button>
-            {uploadProgress > 0 && <p>Progression : {uploadProgress}%</p>}
-            {message && <p>{message}</p>}
+
+            {uploadProgress > 0 && (
+                <div className="progression-upload">
+                    <div style={{ width: `${uploadProgress}%` }}></div>
+                </div>
+            )}
+
+            {message && (
+                <p className={message.includes('succès') ? 'message-succes' : 'message-erreur'}>
+                    {message}
+                </p>
+            )}
         </div>
     );
 };

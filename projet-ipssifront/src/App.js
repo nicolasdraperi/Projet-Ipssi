@@ -6,6 +6,9 @@ import UserDashboard from './pages/UserDashboard';  // Import du Dashboard
 import LoginPage from './pages/LoginPage';  // Import de la page de connexion
 import SignupPage from './pages/SignupPage';  // Import de la page d'inscription
 import AccountManagement from './pages/AccountManagement';  // Import de la page de gestion du compte
+import MentionsLegales from './pages/MentionsLegales';  // Importez la page Mentions légales
+import SettingsPage from './pages/SettingsPage';  // Assurez-vous que le chemin est correct
+
 
 const App = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -38,6 +41,12 @@ const App = () => {
 
                     {/* Route pour la gestion du compte, accessible seulement si l'utilisateur est authentifié */}
                     <Route path="/account" element={isAuthenticated ? <AccountManagement /> : <Navigate to="/login" />} />
+
+                    {/* Route pour les mentions légales */}
+                    <Route path="/mentions-legales" element={<MentionsLegales />} />
+
+                    <Route path="/settings" element={<SettingsPage />} /> {/* Associez SettingsPage à la route */}
+
 
                     {/* Redirection de la route "/" vers le Dashboard si l'utilisateur est authentifié, sinon vers /login */}
                     <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />

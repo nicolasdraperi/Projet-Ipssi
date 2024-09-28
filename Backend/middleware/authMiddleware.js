@@ -7,16 +7,15 @@ exports.isAuthenticated = (req, res, next) => {
         return res.status(401).json({ message: 'Token non fourni.' });
     }
 
-    // Le token est généralement sous la forme "Bearer <token>"
     const tokenPart = token.split(' ')[1];
 
-    jwt.verify(tokenPart, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(tokenPart, 'secret', (err, decoded) => {
         if (err) {
             return res.status(403).json({ message: 'Token invalide.' });
         }
 
-        req.user = decoded;  // Stocker les informations utilisateur décodées dans req.user
-        next();  // Passer au prochain middleware ou route
+        req.user = decoded;  
+        next();  
     });
 };
 

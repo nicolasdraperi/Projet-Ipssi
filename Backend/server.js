@@ -12,8 +12,14 @@ const userRoutes = require('./routes/userRoutes');  // Chemin vers ton fichier u
 const bodyParser = require('body-parser');
 const { isAuthenticated, isAdmin } = require('./middleware/authMiddleware');
 
-
-
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.MAIL, 
+        pass: process.env.MDP_GG   
+    }
+});
 
 
 
@@ -290,6 +296,53 @@ app.get('/api/admin/user-stats', isAuthenticated, isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error fetching user stats:', error);
         res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
+    }
+});
+
+app.delete('/api/delete-account', isAuthenticated, async (req, res) => {
+    const userId = req.user.id; 
+    try {
+        const user = await User.findByPk(userId, {
+            include: [File]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+
+        const fileCount = user.Files.length;
+        const totalSize = user.Files.reduce((acc, file) => acc + file.Taille, 0);
+
+        for (let file of user.Files) {
+            const filePath = path.join(__dirname, 'uploads', String(userId), file.Nom_fichier);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);  
+            }
+            await file.destroy();  
+        }
+
+        await user.destroy();
+
+        const userMailOptions = {
+            from: process.env.MAIL,
+            to: user.Email,
+            subject: 'Confirmation de suppression de compte',
+            text: `Votre compte et ${fileCount} fichier(s) associé(s) ont été supprimés avec succès.`
+        };
+        await transporter.sendMail(userMailOptions);
+
+        const adminMailOptions = {
+            from: process.env.MAIL,
+            to: process.env.MAIL,  
+            subject: 'Suppression de compte utilisateur',
+            text: `L'utilisateur ${user.Email} (ID: ${userId}) a supprimé son compte, supprimant ${fileCount} fichier(s) pour un total de ${totalSize} octets.`
+        };
+        await transporter.sendMail(adminMailOptions);
+
+        res.json({ message: 'Compte et fichiers supprimés avec succès.' });
+    } catch (error) {
+        console.error('Error deleting account:', error);
+        res.status(500).json({ message: 'Erreur lors de la suppression du compte.' });
     }
 });
 

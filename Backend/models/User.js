@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
+
 const User = sequelize.define('User', {
     ID_Utilisateur: {
         type: DataTypes.INTEGER,
@@ -38,7 +39,7 @@ const User = sequelize.define('User', {
     },
     role: {
         type: DataTypes.STRING,
-        defaultValue: 'user',  // Le rôle par défaut est 'user'
+        defaultValue: 'user',  
     },
     Capacite_stockage: { 
         type: DataTypes.INTEGER,

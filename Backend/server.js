@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const sequelize = require('./config/database'); // Connexion Sequelize à MySQL
-const User = require('./models/User'); // Modèle Sequelize pour les utilisateurs
 const multer = require('multer'); // Pour l'upload de fichiers
 const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
@@ -14,7 +13,7 @@ const bodyParser = require('body-parser');
 const PDFDocument = require('pdfkit');
 const paypal = require('paypal-rest-sdk');
 
-
+const { User, Invoice } = require('./models');
 
 //Config Paypal
 paypal.configure({
@@ -420,50 +419,126 @@ app.get('/api/success', async (req, res) => {
             throw error;
         } else {
             try {
-                
                 const user = await User.findByPk(userId);
-
                 if (!user) {
                     return res.status(404).json({ message: 'Utilisateur non trouvé.' });
                 }
-
                 user.Capacite_stockage += 20;
                 await user.save();
-
-                const invoicePath = `./factures/facture_${payment.id}.pdf`;
-                const doc = new PDFDocument();
-
-                doc.pipe(fs.createWriteStream(invoicePath));
-
-                doc.fontSize(25).text('Facture', { align: 'center' });
-                doc.moveDown();
-                doc.text(`Date : ${new Date().toISOString().split('T')[0]}`);
-                doc.text(`Montant HT : 20.00 €`);
-                doc.text(`Montant TTC : 24.00 €`);
-                doc.moveDown();
-                doc.text('Télécharger la facture', {
-                    link: `http://localhost:5000/api/telecharger-pdf/${payment.id}`,
-                    underline: true,
+                await Invoice.create({
+                    userId: userId,
+                    clientType: 'particulier', 
+                    date: new Date(),
+                    amount: 24.00, 
+                    description: 'Achat de 20 Go d\'espace de stockage',
+                    status: 'paid', 
+                    companyName: user.companyName || null, 
+                    siret: user.siret || null,             
+                    vatNumber: user.vatNumber || null      
                 });
 
-                doc.end();
-
-                
                 res.json({ message: 'Paiement validé. 20 Go ont été ajoutés à votre compte.' });
             } catch (err) {
-                console.error('Erreur lors de la mise à jour de l\'utilisateur :', err);
-                res.status(500).json({ message: 'Erreur lors de la mise à jour de la capacité de stockage.' });
+                console.error('Erreur lors de la mise à jour de l\'utilisateur ou de la création de la facture :', err);
+                res.status(500).json({ message: 'Erreur lors de la mise à jour ou de la création de la facture.' });
             }
         }
     });
 });
 
-app.get('/api/telecharger-pdf/:id', (req, res) => {
-    const invoicePath = path.join(__dirname, 'factures', `facture_${req.params.id}.pdf`);
-    res.download(invoicePath, `facture_${req.params.id}.pdf`);
+
+//
+app.get('/api/user-invoices', isAuthenticated, async (req, res) => {
+    const userId = req.user.id; 
+
+    try {
+        // On récup le user pour l'utiliser dans la genération de la de facture
+        const user = await User.findByPk(userId, {
+            include: [{
+                model: Invoice,
+                as: 'invoices',  
+            }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+        const formattedInvoices = user.invoices.map(invoice => {
+            const amountTTC = parseFloat(invoice.amount) || 0;
+            const amountHT = (amountTTC / 1.20).toFixed(2);  
+
+            return {
+                clientName: `${user.Nom} ${user.Prenom}`,
+                purchaseDate: invoice.date.toISOString().split('T')[0],  
+                priceTTC: amountTTC.toFixed(2) + ' €',  
+                priceHT: amountHT + ' €',  
+                description: invoice.description,  
+                status: invoice.status,  
+                companyName: invoice.companyName || 'Non spécifié',  
+                siret: invoice.siret || 'Non spécifié',  
+                vatNumber: invoice.vatNumber || 'Non spécifié'  
+            };
+        });
+        res.json(formattedInvoices);
+
+    } catch (error) {
+        console.error('Erreur lors de la récupération des factures :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des factures.' });
+    }
 });
 
+app.post('/api/download-invoice', isAuthenticated, async (req, res) => {
+    const { invoiceId } = req.body; 
+    
+    if (!invoiceId) {
+        return res.status(400).json({ message: 'ID de facture manquant.' });
+    }
+    try {
+        const invoice = await Invoice.findByPk(invoiceId, {
+            include: [{ model: User, as: 'user' }]  
+        });
 
+        if (!invoice) {
+            return res.status(404).json({ message: 'Facture non trouvée.' });
+        }
+
+        const user = invoice.user;  // Utilisateur lié à la facture
+        const amountTTC = parseFloat(invoice.amount) || 0;
+        const amountHT = (amountTTC / 1.20).toFixed(2);  // Prix HT (déduit 20%)
+
+        // Gen du pdf
+        const doc = new PDFDocument();
+        const filePath = path.join(__dirname, 'factures', `facture_${invoice.id}.pdf`);
+
+        res.setHeader('Content-Disposition', `attachment; filename=facture_${invoice.id}.pdf`);
+        res.setHeader('Content-Type', 'application/pdf');
+
+        doc.pipe(res);
+        doc.fontSize(25).text('Facture', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(14).text(`Nom du client : ${user.Nom} ${user.Prenom}`);
+        doc.text(`Date d'achat : ${invoice.date.toISOString().split('T')[0]}`);
+        doc.text(`Prix payé TTC : ${amountTTC.toFixed(2)} €`);
+        doc.text(`Prix payé HT : ${amountHT} €`);
+        doc.text(`Description : ${invoice.description}`);
+        doc.text(`Statut : ${invoice.status}`);
+        doc.moveDown();
+
+        if (invoice.companyName) {
+            doc.text(`Nom de la compagnie : ${invoice.companyName}`);
+        }
+        if (invoice.siret) {
+            doc.text(`SIRET : ${invoice.siret}`);
+        }
+        if (invoice.vatNumber) {
+            doc.text(`Numéro de TVA : ${invoice.vatNumber}`);
+        }
+        doc.end();
+    } catch (error) {
+        console.error('Erreur lors de la génération du PDF :', error);
+        res.status(500).json({ message: 'Erreur lors de la génération du PDF.' });
+    }
+});
 
 const PORT = 5000;
 app.listen(PORT, () => {

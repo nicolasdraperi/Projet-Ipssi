@@ -40,7 +40,11 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         defaultValue: 'user',  // Le rôle par défaut est 'user'
     },
-    
+    Capacite_stockage: { 
+        type: DataTypes.INTEGER,
+        defaultValue: 0, 
+        allowNull: false,
+    },
 }, {
     tableName: 'utilisateur',
     timestamps: false,

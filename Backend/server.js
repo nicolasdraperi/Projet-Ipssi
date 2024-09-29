@@ -9,9 +9,21 @@ const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
 const File = require('./models/File');
 const userRoutes = require('./routes/userRoutes');  // Chemin vers ton fichier userRoutes.js
-const bodyParser = require('body-parser');
 const { isAuthenticated, isAdmin } = require('./middleware/authMiddleware');
+const bodyParser = require('body-parser');
+const PDFDocument = require('pdfkit');
+const paypal = require('paypal-rest-sdk');
 
+
+
+//Config Paypal
+paypal.configure({
+    'mode': 'sandbox', 
+    'client_id': process.env.PAYPAL_CLIENT_ID,
+    'client_secret': process.env.PAYPAL_CLIENT_SECRET
+}); 
+
+//Config Mail
 const nodemailer = require('nodemailer');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -20,9 +32,6 @@ const transporter = nodemailer.createTransport({
         pass: process.env.MDP_GG   
     }
 });
-
-
-
 
 // Importer le middleware de vérification du token
 const verifyToken = require('./middleware/verifyToken');
@@ -34,7 +43,7 @@ app.use(express.json()); // Middleware pour gérer les requêtes avec du JSON
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
+    credentials: false
 }));
 
 // Middleware pour rendre le dossier des fichiers accessible publiquement
@@ -345,6 +354,115 @@ app.delete('/api/delete-account', isAuthenticated, async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la suppression du compte.' });
     }
 });
+
+app.post('/api/purchase-storage', isAuthenticated, (req, res) => {
+    const montantHT = 20.00;
+    const montantTTC = montantHT * 1.20; 
+
+    const create_payment_json = {
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
+        "redirect_urls": {
+            "return_url": `http://localhost:5000/api/success?userId=${req.user.id}`, 
+            "cancel_url": "http://localhost:3000/cancel"
+        },
+        "transactions": [{
+            "item_list": {
+                "items": [{
+                    "name": "Espace supplémentaire",
+                    "sku": "001",
+                    "price": montantTTC.toFixed(2),
+                    "currency": "EUR",
+                    "quantity": 1
+                }]
+            },
+            "amount": {
+                "currency": "EUR",
+                "total": montantTTC.toFixed(2)
+            },
+            "description": "Achat de 20 Go d'espace supplémentaire"
+        }]
+    };
+
+    paypal.payment.create(create_payment_json, function (error, payment) {
+        if (error) {
+            throw error;
+        } else {
+            for (let i = 0; i < payment.links.length; i++) {
+                if (payment.links[i].rel === 'approval_url') {
+                    return res.json({ redirectUrl: payment.links[i].href });
+                }
+            }
+        }
+    });
+});
+
+app.get('/api/success', async (req, res) => {
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+    const userId = req.query.userId;
+
+    const execute_payment_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "EUR",
+                "total": "24.00"
+            }
+        }]
+    };
+
+    paypal.payment.execute(paymentId, execute_payment_json, async function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            throw error;
+        } else {
+            try {
+                
+                const user = await User.findByPk(userId);
+
+                if (!user) {
+                    return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+                }
+
+                user.Capacite_stockage += 20;
+                await user.save();
+
+                const invoicePath = `./factures/facture_${payment.id}.pdf`;
+                const doc = new PDFDocument();
+
+                doc.pipe(fs.createWriteStream(invoicePath));
+
+                doc.fontSize(25).text('Facture', { align: 'center' });
+                doc.moveDown();
+                doc.text(`Date : ${new Date().toISOString().split('T')[0]}`);
+                doc.text(`Montant HT : 20.00 €`);
+                doc.text(`Montant TTC : 24.00 €`);
+                doc.moveDown();
+                doc.text('Télécharger la facture', {
+                    link: `http://localhost:5000/api/telecharger-pdf/${payment.id}`,
+                    underline: true,
+                });
+
+                doc.end();
+
+                
+                res.json({ message: 'Paiement validé. 20 Go ont été ajoutés à votre compte.' });
+            } catch (err) {
+                console.error('Erreur lors de la mise à jour de l\'utilisateur :', err);
+                res.status(500).json({ message: 'Erreur lors de la mise à jour de la capacité de stockage.' });
+            }
+        }
+    });
+});
+
+app.get('/api/telecharger-pdf/:id', (req, res) => {
+    const invoicePath = path.join(__dirname, 'factures', `facture_${req.params.id}.pdf`);
+    res.download(invoicePath, `facture_${req.params.id}.pdf`);
+});
+
 
 
 const PORT = 5000;

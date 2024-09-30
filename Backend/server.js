@@ -3,20 +3,34 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const sequelize = require('./config/database'); // Connexion Sequelize à MySQL
-const User = require('./models/User'); // Modèle Sequelize pour les utilisateurs
 const multer = require('multer'); // Pour l'upload de fichiers
 const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
 const File = require('./models/File');
 const userRoutes = require('./routes/userRoutes');  // Chemin vers ton fichier userRoutes.js
-const bodyParser = require('body-parser');
 const { isAuthenticated, isAdmin } = require('./middleware/authMiddleware');
+const bodyParser = require('body-parser');
+const PDFDocument = require('pdfkit');
+const paypal = require('paypal-rest-sdk');
 
+const { User, Invoice } = require('./models');
 
+//Config Paypal
+paypal.configure({
+    'mode': 'sandbox', 
+    'client_id': process.env.PAYPAL_CLIENT_ID,
+    'client_secret': process.env.PAYPAL_CLIENT_SECRET
+}); 
 
-
-
-
+//Config Mail
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.MAIL, 
+        pass: process.env.MDP_GG   
+    }
+});
 
 // Importer le middleware de vérification du token
 const verifyToken = require('./middleware/verifyToken');
@@ -26,8 +40,9 @@ app.use(express.json()); // Middleware pour gérer les requêtes avec du JSON
 
 // Configuration CORS (autorisation de toutes les origines)
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 
@@ -43,34 +58,107 @@ app.use('/api', userRoutes);
 // ROUTES D'INSCRIPTION ET CONNEXION
 // ----------------------------
 
-// Route pour gérer l'inscription
+// Route pour gérer l'inscription et rediriger vers PayPal
+
 app.post('/api/register', async (req, res) => {
     const { email, password, firstName, lastName, address } = req.body;
-    
-    if (!email || !password || !firstName || !lastName || !address) {
-        return res.status(400).json({ message: 'Veuillez fournir toutes les informations requises.' });
-    }
-    
+
     try {
         const userExists = await User.findOne({ where: { Email: email } });
         if (userExists) {
-            return res.status(400).json({ message: 'Utilisateur déjà inscrit' });
+            return res.status(400).json({ message: 'Utilisateur déjà inscrit.' });
         }
-        
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        const newUser = await User.create({
-            Nom: firstName,
-            Prenom: lastName,
-            Email: email,
-            Mot_de_passe: hashedPassword,
-            Adresse: address
+        const create_payment_json = {
+            "intent": "sale",
+            "payer": {
+                "payment_method": "paypal"
+            },
+            "redirect_urls": {
+                "return_url": "http://localhost:5000/api/registration-success",  
+                "cancel_url": "http://localhost:5000/api/cancel" 
+            },
+            "transactions": [{
+                "item_list": {
+                    "items": [{
+                        "name": "Inscription",
+                        "sku": "001",
+                        "price": "20.00",
+                        "currency": "EUR",
+                        "quantity": 1
+                    }]
+                },
+                "amount": {
+                    "currency": "EUR",
+                    "total": "20.00"
+                },
+                "description": "Paiement pour l'inscription et obtention de 20 Go de stockage."
+            }]
+        };
+
+        paypal.payment.create(create_payment_json, function (error, payment) {
+            if (error) {
+                console.error(error);
+                return res.status(500).json({ message: 'Erreur lors de la création du paiement.' });
+            } else {
+                for (let i = 0; i < payment.links.length; i++) {
+                    if (payment.links[i].rel === 'approval_url') {
+                        return res.status(302).set('Location', payment.links[i].href).send();
+                    }
+                }
+            }
         });
         
-        return res.status(201).json({ message: 'Inscription réussie, vous pouvez vous connecter.' });
+
     } catch (error) {
-        return res.status(500).json({ message: 'Erreur serveur lors de l\'inscription.' });
+        console.error('Erreur lors de l\'inscription :', error);
+        res.status(500).json({ message: 'Erreur lors de l\'inscription.' });
     }
 });
+
+
+
+// créer l'utilisateur après paiement réussi
+app.get('/api/registration-success', async (req, res) => {
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+    const { email, password, firstName, lastName, address } = req.body;
+
+    const execute_payment_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "EUR",
+                "total": "20.00"
+            }
+        }]
+    };
+
+    paypal.payment.execute(paymentId, execute_payment_json, async function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            return res.status(500).json({ message: 'Erreur lors de la validation du paiement.' });
+        } else {
+            try {
+                const hashedPassword = bcrypt.hashSync(password, 10);
+
+                const newUser = await User.create({
+                    Nom: firstName,
+                    Prenom: lastName,
+                    Email: email,
+                    Mot_de_passe: hashedPassword,
+                    Adresse: address,
+                    Capacite_stockage: 20, 
+                });
+
+                res.json({ message: 'Inscription réussie avec 20 Go de stockage ajoutés.', user: newUser });
+            } catch (error) {
+                console.error('Erreur lors de la création de l\'utilisateur après paiement :', error);
+                res.status(500).json({ message: 'Erreur lors de la création de l\'utilisateur.' });
+            }
+        }
+    });
+});
+
 
 // Route pour gérer la connexion
 app.post('/api/login', async (req, res) => {
@@ -228,74 +316,183 @@ User.hasMany(File, { foreignKey: 'ID_Utilisateur' });
 File.belongsTo(User, { foreignKey: 'ID_Utilisateur' });
 // Démarrer le serveur
 
-
-app.post('/api/change-role', isAuthenticated, isAdmin, async (req, res) => {
-    const { userId, newRole } = req.body;
-
+app.delete('/api/delete-account', isAuthenticated, async (req, res) => {
+    const userId = req.user.id; 
     try {
-        const user = await User.findByPk(userId);
+        const user = await User.findByPk(userId, {
+            include: [File]
+        });
+
         if (!user) {
             return res.status(404).json({ message: 'Utilisateur non trouvé.' });
         }
 
-        user.role = newRole;
-        await user.save();
+        const fileCount = user.Files.length;
+        const totalSize = user.Files.reduce((acc, file) => acc + file.Taille, 0);
 
-        res.json({ message: `Le rôle de l'utilisateur a été mis à jour en ${newRole}.`, user });
-    } catch (error) {
-        res.status(500).json({ message: 'Erreur lors de la mise à jour du rôle.', error });
-    }
-});
-
-app.post('/api/delete-user', isAuthenticated, isAdmin, async (req, res) => {
-    const { userId } = req.body;
-
-    try {
-
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User non trouvé.' });
+        for (let file of user.Files) {
+            const filePath = path.join(__dirname, 'uploads', String(userId), file.Nom_fichier);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);  
+            }
+            await file.destroy();  
         }
 
         await user.destroy();
-        res.json({ message: `User ${userId} has été supprimé.` });
+
+        const userMailOptions = {
+            from: process.env.MAIL,
+            to: user.Email,
+            subject: 'Confirmation de suppression de compte',
+            text: `Votre compte et ${fileCount} fichier(s) associé(s) ont été supprimés avec succès.`
+        };
+        await transporter.sendMail(userMailOptions);
+
+        const adminMailOptions = {
+            from: process.env.MAIL,
+            to: process.env.MAIL,  
+            subject: 'Suppression de compte utilisateur',
+            text: `L'utilisateur ${user.Email} (ID: ${userId}) a supprimé son compte, supprimant ${fileCount} fichier(s) pour un total de ${totalSize} octets.`
+        };
+        await transporter.sendMail(adminMailOptions);
+
+        res.json({ message: 'Compte et fichiers supprimés avec succès.' });
     } catch (error) {
-        console.error('Erreur durant la suppression:', error);
-        res.status(500).json({ message: 'Erreur durant la suppression:' });
+        console.error('Error deleting account:', error);
+        res.status(500).json({ message: 'Erreur lors de la suppression du compte.' });
     }
 });
 
+app.post('/api/purchase-storage', isAuthenticated, (req, res) => {
+    const montantHT = 20.00;
+    const montantTTC = montantHT * 1.20; 
 
-app.get('/api/admin/user-stats', isAuthenticated, isAdmin, async (req, res) => {
+    const create_payment_json = {
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
+        "redirect_urls": {
+            "return_url": `http://localhost:5000/api/success?userId=${req.user.id}`, 
+            "cancel_url": "http://localhost:3000/cancel"
+        },
+        "transactions": [{
+            "item_list": {
+                "items": [{
+                    "name": "Espace supplémentaire",
+                    "sku": "001",
+                    "price": montantTTC.toFixed(2),
+                    "currency": "EUR",
+                    "quantity": 1
+                }]
+            },
+            "amount": {
+                "currency": "EUR",
+                "total": montantTTC.toFixed(2)
+            },
+            "description": "Achat de 20 Go d'espace supplémentaire"
+        }]
+    };
+
+    paypal.payment.create(create_payment_json, function (error, payment) {
+        if (error) {
+            throw error;
+        } else {
+            for (let i = 0; i < payment.links.length; i++) {
+                if (payment.links[i].rel === 'approval_url') {
+                    return res.json({ redirectUrl: payment.links[i].href });
+                }
+            }
+        }
+    });
+});
+
+app.get('/api/success', async (req, res) => {
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+    const userId = req.query.userId;
+
+    const execute_payment_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "EUR",
+                "total": "24.00"
+            }
+        }]
+    };
+
+    paypal.payment.execute(paymentId, execute_payment_json, async function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            throw error;
+        } else {
+            try {
+                const user = await User.findByPk(userId);
+                if (!user) {
+                    return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+                }
+                user.Capacite_stockage += 20;
+                await user.save();
+                await Invoice.create({
+                    userId: userId,
+                    clientType: 'particulier', 
+                    date: new Date(),
+                    amount: 24.00, 
+                    description: 'Achat de 20 Go d\'espace de stockage',
+                    status: 'paid', 
+                    companyName: user.companyName || null, 
+                    siret: user.siret || null,             
+                    vatNumber: user.vatNumber || null      
+                });
+
+                res.json({ message: 'Paiement validé. 20 Go ont été ajoutés à votre compte.' });
+            } catch (err) {
+                console.error('Erreur lors de la mise à jour de l\'utilisateur ou de la création de la facture :', err);
+                res.status(500).json({ message: 'Erreur lors de la mise à jour ou de la création de la facture.' });
+            }
+        }
+    });
+});
+
+
+//
+app.get('/api/user-invoices', isAuthenticated, async (req, res) => {
+    const userId = req.user.id; 
+
     try {
-        const users = await User.findAll({
-            attributes: ['ID_Utilisateur', 'Nom', 'Prenom', 'Email', 'role'],
+        // On récup le user pour l'utiliser dans la genération de la de facture
+        const user = await User.findByPk(userId, {
             include: [{
-                model: File,
-                attributes: [
-                    [sequelize.fn('COUNT', sequelize.col('Files.ID_Fichier')), 'fileCount'],
-                    [sequelize.fn('SUM', sequelize.col('Files.Taille')), 'totalSize']
-                ]
-            }],
-            group: ['User.ID_Utilisateur'] 
+                model: Invoice,
+                as: 'invoices',  
+            }]
         });
-        const userData = users.map(user => {
-            const fileData = user.Files[0] ? user.Files[0].dataValues : { fileCount: 0, totalSize: 0 };
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+        }
+        const formattedInvoices = user.invoices.map(invoice => {
+            const amountTTC = parseFloat(invoice.amount) || 0;
+            const amountHT = (amountTTC / 1.20).toFixed(2);  
+
             return {
-                id: user.ID_Utilisateur,
-                name: user.Nom,
-                surname: user.Prenom,
-                email: user.Email,
-                role: user.role,
-                fileCount: fileData.fileCount || 0, 
-                totalSize: fileData.totalSize || 0  
+                clientName: `${user.Nom} ${user.Prenom}`,
+                purchaseDate: invoice.date.toISOString().split('T')[0],  
+                priceTTC: amountTTC.toFixed(2) + ' €',  
+                priceHT: amountHT + ' €',  
+                description: invoice.description,  
+                status: invoice.status,  
+                companyName: invoice.companyName || 'Non spécifié',  
+                siret: invoice.siret || 'Non spécifié',  
+                vatNumber: invoice.vatNumber || 'Non spécifié'  
             };
         });
+        res.json(formattedInvoices);
 
-        res.json(userData);
     } catch (error) {
-        console.error('Error fetching user stats:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
+        console.error('Erreur lors de la récupération des factures :', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des factures.' });
     }
 });
 // Route pour récupérer l'usage du stockage pour un utilisateur donné
@@ -328,6 +525,58 @@ app.get('/api/storage-usage', verifyToken, async (req, res) => {
 });
 
 
+app.post('/api/download-invoice', isAuthenticated, async (req, res) => {
+    const { invoiceId } = req.body; 
+    
+    if (!invoiceId) {
+        return res.status(400).json({ message: 'ID de facture manquant.' });
+    }
+    try {
+        const invoice = await Invoice.findByPk(invoiceId, {
+            include: [{ model: User, as: 'user' }]  
+        });
+
+        if (!invoice) {
+            return res.status(404).json({ message: 'Facture non trouvée.' });
+        }
+
+        const user = invoice.user;  // Utilisateur lié à la facture
+        const amountTTC = parseFloat(invoice.amount) || 0;
+        const amountHT = (amountTTC / 1.20).toFixed(2);  // Prix HT (déduit 20%)
+
+        // Gen du pdf
+        const doc = new PDFDocument();
+        const filePath = path.join(__dirname, 'factures', `facture_${invoice.id}.pdf`);
+
+        res.setHeader('Content-Disposition', `attachment; filename=facture_${invoice.id}.pdf`);
+        res.setHeader('Content-Type', 'application/pdf');
+
+        doc.pipe(res);
+        doc.fontSize(25).text('Facture', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(14).text(`Nom du client : ${user.Nom} ${user.Prenom}`);
+        doc.text(`Date d'achat : ${invoice.date.toISOString().split('T')[0]}`);
+        doc.text(`Prix payé TTC : ${amountTTC.toFixed(2)} €`);
+        doc.text(`Prix payé HT : ${amountHT} €`);
+        doc.text(`Description : ${invoice.description}`);
+        doc.text(`Statut : ${invoice.status}`);
+        doc.moveDown();
+
+        if (invoice.companyName) {
+            doc.text(`Nom de la compagnie : ${invoice.companyName}`);
+        }
+        if (invoice.siret) {
+            doc.text(`SIRET : ${invoice.siret}`);
+        }
+        if (invoice.vatNumber) {
+            doc.text(`Numéro de TVA : ${invoice.vatNumber}`);
+        }
+        doc.end();
+    } catch (error) {
+        console.error('Erreur lors de la génération du PDF :', error);
+        res.status(500).json({ message: 'Erreur lors de la génération du PDF.' });
+    }
+});
 
 const PORT = 5000;
 app.listen(PORT, () => {

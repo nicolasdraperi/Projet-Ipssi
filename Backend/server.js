@@ -40,9 +40,10 @@ app.use(express.json()); // Middleware pour gérer les requêtes avec du JSON
 
 // Configuration CORS (autorisation de toutes les origines)
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: false
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 
 // Middleware pour rendre le dossier des fichiers accessible publiquement
@@ -57,34 +58,107 @@ app.use('/api', userRoutes);
 // ROUTES D'INSCRIPTION ET CONNEXION
 // ----------------------------
 
-// Route pour gérer l'inscription
+// Route pour gérer l'inscription et rediriger vers PayPal
+
 app.post('/api/register', async (req, res) => {
     const { email, password, firstName, lastName, address } = req.body;
-    
-    if (!email || !password || !firstName || !lastName || !address) {
-        return res.status(400).json({ message: 'Veuillez fournir toutes les informations requises.' });
-    }
-    
+
     try {
         const userExists = await User.findOne({ where: { Email: email } });
         if (userExists) {
-            return res.status(400).json({ message: 'Utilisateur déjà inscrit' });
+            return res.status(400).json({ message: 'Utilisateur déjà inscrit.' });
         }
-        
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        const newUser = await User.create({
-            Nom: firstName,
-            Prenom: lastName,
-            Email: email,
-            Mot_de_passe: hashedPassword,
-            Adresse: address
+        const create_payment_json = {
+            "intent": "sale",
+            "payer": {
+                "payment_method": "paypal"
+            },
+            "redirect_urls": {
+                "return_url": "http://localhost:5000/api/registration-success",  
+                "cancel_url": "http://localhost:5000/api/cancel" 
+            },
+            "transactions": [{
+                "item_list": {
+                    "items": [{
+                        "name": "Inscription",
+                        "sku": "001",
+                        "price": "20.00",
+                        "currency": "EUR",
+                        "quantity": 1
+                    }]
+                },
+                "amount": {
+                    "currency": "EUR",
+                    "total": "20.00"
+                },
+                "description": "Paiement pour l'inscription et obtention de 20 Go de stockage."
+            }]
+        };
+
+        paypal.payment.create(create_payment_json, function (error, payment) {
+            if (error) {
+                console.error(error);
+                return res.status(500).json({ message: 'Erreur lors de la création du paiement.' });
+            } else {
+                for (let i = 0; i < payment.links.length; i++) {
+                    if (payment.links[i].rel === 'approval_url') {
+                        return res.status(302).set('Location', payment.links[i].href).send();
+                    }
+                }
+            }
         });
         
-        return res.status(201).json({ message: 'Inscription réussie, vous pouvez vous connecter.' });
+
     } catch (error) {
-        return res.status(500).json({ message: 'Erreur serveur lors de l\'inscription.' });
+        console.error('Erreur lors de l\'inscription :', error);
+        res.status(500).json({ message: 'Erreur lors de l\'inscription.' });
     }
 });
+
+
+
+// créer l'utilisateur après paiement réussi
+app.get('/api/registration-success', async (req, res) => {
+    const payerId = req.query.PayerID;
+    const paymentId = req.query.paymentId;
+    const { email, password, firstName, lastName, address } = req.body;
+
+    const execute_payment_json = {
+        "payer_id": payerId,
+        "transactions": [{
+            "amount": {
+                "currency": "EUR",
+                "total": "20.00"
+            }
+        }]
+    };
+
+    paypal.payment.execute(paymentId, execute_payment_json, async function (error, payment) {
+        if (error) {
+            console.log(error.response);
+            return res.status(500).json({ message: 'Erreur lors de la validation du paiement.' });
+        } else {
+            try {
+                const hashedPassword = bcrypt.hashSync(password, 10);
+
+                const newUser = await User.create({
+                    Nom: firstName,
+                    Prenom: lastName,
+                    Email: email,
+                    Mot_de_passe: hashedPassword,
+                    Adresse: address,
+                    Capacite_stockage: 20, 
+                });
+
+                res.json({ message: 'Inscription réussie avec 20 Go de stockage ajoutés.', user: newUser });
+            } catch (error) {
+                console.error('Erreur lors de la création de l\'utilisateur après paiement :', error);
+                res.status(500).json({ message: 'Erreur lors de la création de l\'utilisateur.' });
+            }
+        }
+    });
+});
+
 
 // Route pour gérer la connexion
 app.post('/api/login', async (req, res) => {

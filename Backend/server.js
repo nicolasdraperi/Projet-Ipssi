@@ -292,6 +292,35 @@ app.get('/api/admin/user-stats', isAuthenticated, isAdmin, async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
     }
 });
+// Route pour récupérer l'usage du stockage pour un utilisateur donné
+app.get('/api/storage-usage', verifyToken, async (req, res) => {
+    const userId = req.userId;
+
+    try {
+        // Récupérer tous les fichiers de l'utilisateur
+        const files = await File.findAll({
+            where: { ID_Utilisateur: userId }
+        });
+
+        // Vérifier et calculer la taille totale
+        const totalUsage = files.reduce((acc, file) => {
+            // Assurer que file.Taille est bien un nombre
+            const fileSize = Number(file.Taille);
+            if (isNaN(fileSize) || fileSize < 0) {
+                console.warn(`Taille incorrecte pour le fichier avec ID: ${file.ID_Fichier}`);
+                return acc; // Si la taille est invalide, l'ignorer
+            }
+            return acc + fileSize;
+        }, 0);
+
+        // Envoyer l'usage total (en octets)
+        res.json({ usage: totalUsage });
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'usage du stockage:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération de l\'usage du stockage' });
+    }
+});
+
 
 
 const PORT = 5000;

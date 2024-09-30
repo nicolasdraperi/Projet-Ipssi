@@ -170,32 +170,38 @@ app.post('/api/files/upload', verifyToken, upload.single('file'), async (req, re
     }
 });
 
-// Route pour récupérer la liste des fichiers de l'utilisateur
-app.get('/api/files', verifyToken, (req, res) => {
-    const userId = req.userId;  // Utilisateur authentifié
+// Route pour récupérer la liste des fichiers d'un utilisateur (avec `userId` comme paramètre)
+app.get('/api/files/:userId', verifyToken, async (req, res) => {
+    const userId = req.params.userId; // Utilisateur spécifié
     const userDirectoryPath = path.join(__dirname, 'uploads', String(userId));
-    
-    // Lire les fichiers dans le dossier de l'utilisateur
-    fs.readdir(userDirectoryPath, (err, files) => {
-        if (err) {
-            return res.status(500).json({ message: 'Erreur lors de la récupération des fichiers.' });
-        }
-
-        const fileList = files.map(file => {
-            const filePath = path.join(userDirectoryPath, file);
-            const stats = fs.statSync(filePath);  // Récupérer les informations sur chaque fichier
-            return {
-                name: file,
-                size: stats.size,  // Taille du fichier
-                uploadDate: stats.birthtime,  // Date d'upload du fichier
-                url: `http://localhost:5000/uploads/${userId}/${file}`  // URL du fichier
-            };
-        });
-
-        res.json({ files: fileList });  // Renvoyer les informations des fichiers en tant qu'objets JSON
-    });
-});
-
+  
+    try {
+      // Vérifier si le dossier de l'utilisateur existe
+      if (!fs.existsSync(userDirectoryPath)) {
+        return res.status(404).json({ message: "Aucun fichier trouvé pour cet utilisateur." });
+      }
+  
+      // Lire les fichiers dans le dossier de l'utilisateur
+      const files = fs.readdirSync(userDirectoryPath);
+  
+      const fileList = files.map(file => {
+        const filePath = path.join(userDirectoryPath, file);
+        const stats = fs.statSync(filePath);
+        return {
+          name: file,
+          size: stats.size,
+          uploadDate: stats.birthtime,
+          url: `http://localhost:5000/uploads/${userId}/${file}`,
+        };
+      });
+  
+      res.json({ files: fileList });
+    } catch (error) {
+      console.error("Erreur lors de la récupération des fichiers :", error);
+      res.status(500).json({ message: "Erreur lors de la récupération des fichiers." });
+    }
+  });
+  
 // Route pour supprimer un fichier
 app.delete('/api/files/:fileName', verifyToken, (req, res) => {
     const userId = req.userId;

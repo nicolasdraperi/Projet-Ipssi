@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import '../assets/css/AuthPage.css';
 
-const LoginPage = ({ setIsAuthenticated, onLogin }) => {  
+const LoginPage = ({ setIsAuthenticated }) => {  
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -30,16 +30,20 @@ const LoginPage = ({ setIsAuthenticated, onLogin }) => {
                 
                 console.log('Rôle de l\'utilisateur:', userRole);  // Log pour vérifier le rôle extrait
 
+                localStorage.setItem('role', userRole);  // Stocker le rôle dans localStorage
+
                 setSuccess('Connexion réussie !');
                 setError('');
                 setIsAuthenticated(true);
-                onLogin();  // Mettre à jour l'état de l'authentification
+                console.log('Token:', localStorage.getItem('token'));
+console.log('Rôle:', localStorage.getItem('role'));
+
 
                 // Rediriger en fonction du rôle de l'utilisateur
                 if (userRole === 'admin') {
-                    navigate('/admin/dashboard');
+                    navigate('/admin');
                 } else {
-                    navigate('/user/dashboard');
+                    navigate('/dashboard');
                 }
             } else {
                 setError('Erreur de connexion');

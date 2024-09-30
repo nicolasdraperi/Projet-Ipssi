@@ -2,19 +2,20 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const AdminPage = () => {
-    const [stats, setStats] = useState({});
     const [users, setUsers] = useState([]);
     const [error, setError] = useState('');  // État pour gérer les erreurs
+    const [loading, setLoading] = useState(true);  // État pour gérer le chargement des données
 
     useEffect(() => {
-        // Récupérer les statistiques et la liste des utilisateurs
-        const fetchData = async () => {
+        // Récupérer les statistiques des utilisateurs
+        const fetchUserStats = async () => {
             try {
                 // Récupérer le token JWT stocké dans le localStorage
                 const token = localStorage.getItem('token');
                 
                 if (!token) {
                     setError("Vous n'êtes pas authentifié.");
+                    setLoading(false);
                     return;
                 }
 
@@ -25,19 +26,23 @@ const AdminPage = () => {
                     }
                 };
 
-                const statsResponse = await axios.get('/api/admin/stats', config);
-                setStats(statsResponse.data);
-
-                const usersResponse = await axios.get('/api/admin/users', config);
-                setUsers(usersResponse.data);
+                // Appel de l'API pour récupérer les statistiques des utilisateurs
+                const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
+                setUsers(response.data);
+                setLoading(false);
             } catch (error) {
                 console.error('Erreur lors de la récupération des données:', error);
                 setError('Erreur lors de la récupération des données. Veuillez réessayer.');
+                setLoading(false);
             }
         };
 
-        fetchData();
+        fetchUserStats();
     }, []);
+
+    if (loading) {
+        return <div>Chargement des statistiques...</div>;
+    }
 
     return (
         <div className="admin-page">
@@ -47,22 +52,34 @@ const AdminPage = () => {
             {/* Affichage des erreurs */}
             {error && <p style={{ color: 'red' }}>{error}</p>}
 
-            <div className="stats">
-                <h3>Statistiques</h3>
-                <ul>
-                    <li>Total des fichiers : {stats.totalFiles}</li>
-                    <li>Fichiers uploadés aujourd'hui : {stats.filesToday}</li>
-                    <li>Utilisateurs actifs : {stats.activeUsers}</li>
-                </ul>
-            </div>
-
             <div className="user-list">
                 <h3>Liste des utilisateurs</h3>
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>{user.name} - {user.storageUsed} Go utilisés</li>
-                    ))}
-                </ul>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Nombre de fichiers</th>
+                            <th>Taille totale des fichiers (Mo)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {users.map(user => (
+                            <tr key={user.id}>
+                                <td>{user.id}</td>
+                                <td>{user.name}</td>
+                                <td>{user.surname}</td>
+                                <td>{user.email}</td>
+                                <td>{user.role}</td>
+                                <td>{user.fileCount}</td>
+                                <td>{(user.totalSize / (1024 * 1024)).toFixed(2)}</td> {/* Convertir la taille en Mo */}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

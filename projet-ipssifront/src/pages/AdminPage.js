@@ -15,7 +15,6 @@ import {
 import '../assets/css/AdminPage.css';
 
 const AdminPage = () => {
-<<<<<<< HEAD
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -87,53 +86,9 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
         setError("Vous n'êtes pas authentifié.");
         return;
       }
-=======
-    const [stats, setStats] = useState({});
-    const [users, setUsers] = useState([]);
-    const [error, setError] = useState('');  // État pour gérer les erreurs
-
-    useEffect(() => {
-        // Récupérer les statistiques et la liste des utilisateurs
-        const fetchData = async () => {
-            try {
-                // Récupérer le token JWT stocké dans le localStorage
-                const token = localStorage.getItem('token');
-                
-                if (!token) {
-                    setError("Vous n'êtes pas authentifié.");
-                    return;
-                }
-
-                // Ajouter le token JWT dans les en-têtes des requêtes
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${token}`  // Inclure le token dans les requêtes
-                    }
-                };
-
-                const statsResponse = await axios.get('/api/admin/stats', config);
-                setStats(statsResponse.data);
-
-                const usersResponse = await axios.get('/api/admin/users', config);
-                setUsers(usersResponse.data);
-            } catch (error) {
-                console.error('Erreur lors de la récupération des données:', error);
-                setError('Erreur lors de la récupération des données. Veuillez réessayer.');
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    return (
-        <div className="admin-page">
-            <h2>Tableau de bord Administrateur</h2>
-            <p>Gestion des utilisateurs et des fichiers</p>
->>>>>>> parent of 112d3ef (admin page up avec liaison partiel au back)
 
       setUserAction('delete');
 
-<<<<<<< HEAD
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -233,25 +188,6 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
           <button onClick={() => handleChangeRole(row.original.id, row.original.role)}>
             {row.original.role === 'admin' ? 'Rétrograder' : 'Promouvoir'}
           </button>
-=======
-            <div className="stats">
-                <h3>Statistiques</h3>
-                <ul>
-                    <li>Total des fichiers : {stats.totalFiles}</li>
-                    <li>Fichiers uploadés aujourd'hui : {stats.filesToday}</li>
-                    <li>Utilisateurs actifs : {stats.activeUsers}</li>
-                </ul>
-            </div>
-
-            <div className="user-list">
-                <h3>Liste des utilisateurs</h3>
-                <ul>
-                    {users.map(user => (
-                        <li key={user.id}>{user.name} - {user.storageUsed} Go utilisés</li>
-                    ))}
-                </ul>
-            </div>
->>>>>>> parent of 112d3ef (admin page up avec liaison partiel au back)
         </div>
       ),
     }),

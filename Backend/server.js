@@ -11,7 +11,9 @@ const bodyParser = require('body-parser');
 const PDFDocument = require('pdfkit');
 const paypal = require('paypal-rest-sdk');
 const nodemailer = require('nodemailer');
-const { User, File, Invoice } = require('./models');
+const { User, Invoice } = require('./models');
+const File = require('./models/File');
+
 
 // Importer les routes
 const userRoutes = require('./routes/userRoutes');  // Chemin vers les routes utilisateur
@@ -66,50 +68,30 @@ app.post('/api/register', async (req, res) => {
     const { email, password, firstName, lastName, address } = req.body;
 
     try {
+        // Vérifier si l'utilisateur existe déjà
         const userExists = await User.findOne({ where: { Email: email } });
         if (userExists) {
             return res.status(400).json({ message: 'Utilisateur déjà inscrit.' });
         }
-        const create_payment_json = {
-            "intent": "sale",
-            "payer": {
-                "payment_method": "paypal"
-            },
-            "redirect_urls": {
-                "return_url": "http://localhost:5000/api/registration-success",  
-                "cancel_url": "http://localhost:5000/api/cancel" 
-            },
-            "transactions": [{
-                "item_list": {
-                    "items": [{
-                        "name": "Inscription",
-                        "sku": "001",
-                        "price": "20.00",
-                        "currency": "EUR",
-                        "quantity": 1
-                    }]
-                },
-                "amount": {
-                    "currency": "EUR",
-                    "total": "20.00"
-                },
-                "description": "Paiement pour l'inscription et obtention de 20 Go de stockage."
-            }]
-        };
 
-        paypal.payment.create(create_payment_json, function (error, payment) {
-            if (error) {
-                console.error(error);
-                return res.status(500).json({ message: 'Erreur lors de la création du paiement.' });
-            } else {
-                for (let i = 0; i < payment.links.length; i++) {
-                    if (payment.links[i].rel === 'approval_url') {
-                        return res.status(302).set('Location', payment.links[i].href).send();
-                    }
-                }
-            }
+        // Hasher le mot de passe
+        const hashedPassword = bcrypt.hashSync(password, 10);
+
+        // Créer un nouvel utilisateur avec 20 Go de stockage
+        const newUser = await User.create({
+            Nom: firstName,
+            Prenom: lastName,
+            Email: email,
+            Mot_de_passe: hashedPassword,
+            Adresse: address,
+            Capacite_stockage: 20  // Ajouter 20 Go de stockage à l'inscription
         });
-        
+
+        // Répondre avec un message de succès et les informations de l'utilisateur
+        res.status(201).json({
+            message: 'Inscription réussie avec 20 Go de stockage ajoutés.',
+            user: newUser
+        });
 
     } catch (error) {
         console.error('Erreur lors de l\'inscription :', error);
@@ -117,49 +99,6 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-
-
-// créer l'utilisateur après paiement réussi
-app.get('/api/registration-success', async (req, res) => {
-    const payerId = req.query.PayerID;
-    const paymentId = req.query.paymentId;
-    const { email, password, firstName, lastName, address } = req.body;
-
-    const execute_payment_json = {
-        "payer_id": payerId,
-        "transactions": [{
-            "amount": {
-                "currency": "EUR",
-                "total": "20.00"
-            }
-        }]
-    };
-
-    paypal.payment.execute(paymentId, execute_payment_json, async function (error, payment) {
-        if (error) {
-            console.log(error.response);
-            return res.status(500).json({ message: 'Erreur lors de la validation du paiement.' });
-        } else {
-            try {
-                const hashedPassword = bcrypt.hashSync(password, 10);
-
-                const newUser = await User.create({
-                    Nom: firstName,
-                    Prenom: lastName,
-                    Email: email,
-                    Mot_de_passe: hashedPassword,
-                    Adresse: address,
-                    Capacite_stockage: 20, 
-                });
-
-                res.json({ message: 'Inscription réussie avec 20 Go de stockage ajoutés.', user: newUser });
-            } catch (error) {
-                console.error('Erreur lors de la création de l\'utilisateur après paiement :', error);
-                res.status(500).json({ message: 'Erreur lors de la création de l\'utilisateur.' });
-            }
-        }
-    });
-});
 
 
 // Route pour gérer la connexion
@@ -314,8 +253,6 @@ app.use((err, req, res, next) => {
 });
 // definition relations entres les models file et user 
 // Définir les relations entre les modèles
-User.hasMany(File, { foreignKey: 'ID_Utilisateur' });
-File.belongsTo(User, { foreignKey: 'ID_Utilisateur' });
 // Démarrer le serveur
 
 app.delete('/api/delete-account', isAuthenticated, async (req, res) => {

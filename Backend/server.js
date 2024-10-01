@@ -559,6 +559,42 @@ app.get('/api/admin/user-stats', isAuthenticated, isAdmin, async (req, res) => {
 // Attachez les routes admin
 app.use('/api', adminRoutes); // Ajoutez ceci pour que le serveur utilise les routes admin
 
+// Nouvelle route GET pour récupérer les fichiers de l'utilisateur avec pagination
+app.get('/api/files', verifyToken, async (req, res) => {
+    const userId = req.userId;  // Récupérer l'ID utilisateur depuis le token
+
+    try {
+        const page = parseInt(req.query.page) || 1; // Récupérer la page, par défaut 1
+        const limit = 5;  // Limite à 5 fichiers par page
+        const offset = (page - 1) * limit;
+
+        // Récupérer les fichiers avec pagination
+        const { rows, count } = await File.findAndCountAll({
+            where: { ID_Utilisateur: userId },
+            limit: limit,
+            offset: offset,
+        });
+
+        const totalPages = Math.ceil(count / limit);
+
+        // Renvoyer les fichiers avec la pagination
+        res.json({
+            files: rows.map(file => ({
+                id: file.ID_Fichier,
+                name: file.Nom_fichier,
+                size: file.Taille,
+                uploadDate: file.Date_upload,
+                url: `http://localhost:5000/uploads/${userId}/${file.Nom_fichier}`
+            })),
+            totalPages: totalPages
+        });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des fichiers :", error);
+        res.status(500).json({ message: "Erreur lors de la récupération des fichiers." });
+    }
+});
+
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Serveur backend démarré sur le port ${PORT}`);

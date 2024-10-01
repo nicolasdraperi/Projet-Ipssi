@@ -50,5 +50,6 @@ const User = sequelize.define('User', {
     tableName: 'utilisateur',
     timestamps: false,
 });
+User.hasMany(File, { foreignKey: 'ID_Utilisateur' });
 
 module.exports = User;

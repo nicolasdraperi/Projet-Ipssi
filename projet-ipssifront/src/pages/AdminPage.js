@@ -8,10 +8,6 @@ import {
   getSortedRowModel,
   flexRender
 } from '@tanstack/react-table';
-
-
-
-
 import '../assets/css/AdminPage.css';
 
 const AdminPage = () => {
@@ -21,6 +17,7 @@ const AdminPage = () => {
   const [selectedUserFiles, setSelectedUserFiles] = useState([]);
   const [userAction, setUserAction] = useState(null);
 
+  // Fonction pour récupérer les statistiques des utilisateurs
   useEffect(() => {
     const fetchUserStats = async () => {
       try {
@@ -37,9 +34,7 @@ const AdminPage = () => {
           },
         };
 
-        // Assurez-vous que cette URL pointe vers le bon backend
-const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
-
+        const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
         setUsers(response.data);
         setLoading(false);
       } catch (error) {
@@ -95,12 +90,12 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
         },
       };
 
-      await axios.post('http://localhost:5000/api/delete-user', { userId }, config);
+      await axios.delete(`http://localhost:5000/api/admin/delete-user/${userId}`, config);
       setUsers(users.filter(user => user.id !== userId));
       setUserAction(null);
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-      setError('Erreur lors de la suppression.');
+      setError('Erreur lors de la suppression de l\'utilisateur.');
       setUserAction(null);
     }
   }, [users]);
@@ -122,7 +117,7 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
         },
       };
 
-      await axios.post('http://localhost:5000/api/change-role', { userId, newRole }, config);
+      await axios.patch('http://localhost:5000/api/admin/change-role', { userId, newRole }, config);
       setUsers(users.map(user => (user.id === userId ? { ...user, role: newRole } : user)));
       setUserAction(null);
     } catch (error) {
@@ -139,44 +134,30 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
     columnHelper.accessor('id', {
       header: 'ID',
       cell: info => info.getValue(),
-      sortingFn: 'basic',
-      enableSorting: true,
     }),
     columnHelper.accessor('name', {
       header: 'Nom',
       cell: info => info.getValue(),
-      sortingFn: 'alphanumeric',
-      enableSorting: true,
     }),
     columnHelper.accessor('surname', {
       header: 'Prénom',
       cell: info => info.getValue(),
-      sortingFn: 'alphanumeric',
-      enableSorting: true,
     }),
     columnHelper.accessor('email', {
       header: 'Email',
       cell: info => info.getValue(),
-      sortingFn: 'alphanumeric',
-      enableSorting: true,
     }),
     columnHelper.accessor('role', {
       header: 'Rôle',
       cell: info => info.getValue(),
-      sortingFn: 'alphanumeric',
-      enableSorting: true,
     }),
     columnHelper.accessor('fileCount', {
       header: 'Nombre de fichiers',
       cell: info => info.getValue(),
-      sortingFn: 'basic',
-      enableSorting: true,
     }),
     columnHelper.accessor('totalSize', {
       header: 'Taille totale des fichiers (Mo)',
       cell: info => (info.getValue() / (1024 * 1024)).toFixed(2),
-      sortingFn: 'basic',
-      enableSorting: true,
     }),
     columnHelper.display({
       id: 'actions',
@@ -191,15 +172,15 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
         </div>
       ),
     }),
-  ], [handleViewFiles, handleDeleteUser, handleChangeRole, columnHelper]);
+  ], [handleViewFiles, handleDeleteUser, handleChangeRole]);
 
   const table = useReactTable({
     data: users,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(), // Ajout de la fonction pour trier les lignes
-    enableSorting: true, // Activer le tri globalement pour la table
+    getSortedRowModel: getSortedRowModel(),
+    enableSorting: true,
   });
 
   if (loading) {
@@ -222,7 +203,7 @@ const response = await axios.get('http://localhost:5000/api/admin/user-stats', c
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
-                    onClick={header.column.getToggleSortingHandler()} // Ajouter le gestionnaire de clic pour activer le tri
+                    onClick={header.column.getToggleSortingHandler()}
                     style={{ cursor: 'pointer' }}
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}

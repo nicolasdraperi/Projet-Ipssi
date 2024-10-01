@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import {
-  useReactTable,
   createColumnHelper,
+  useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  flexRender
+  flexRender,
 } from '@tanstack/react-table';
 import '../assets/css/AdminPage.css';
 
@@ -17,7 +17,6 @@ const AdminPage = () => {
   const [selectedUserFiles, setSelectedUserFiles] = useState([]);
   const [userAction, setUserAction] = useState(null);
 
-  // Fonction pour récupérer les statistiques des utilisateurs
   useEffect(() => {
     const fetchUserStats = async () => {
       try {
@@ -34,21 +33,23 @@ const AdminPage = () => {
           },
         };
 
-        const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
-        setUsers(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des données:', error);
-        setError('Erreur lors de la récupération des données. Veuillez réessayer.');
-        setLoading(false);
-      }
-    };
+       // Correction de l'URL pour correspondre à la route définie sur le serveur
+       const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
 
-    fetchUserStats();
-  }, []);
+       setUsers(response.data);
+       setLoading(false);
+     } catch (error) {
+       console.error('Erreur lors de la récupération des données:', error);
+       setError('Erreur lors de la récupération des données. Veuillez réessayer.');
+       setLoading(false);
+     }
+   };
 
-  // Utiliser useCallback pour mémoriser les fonctions afin qu'elles ne changent pas à chaque rendu
-  const handleViewFiles = useCallback(async (userId) => {
+   fetchUserStats();
+ }, []);
+
+  // Déclaration des fonctions de gestion des actions
+  const handleViewFiles = async (userId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -72,9 +73,9 @@ const AdminPage = () => {
       console.error('Erreur lors de la récupération des fichiers de l\'utilisateur:', error);
       setError('Erreur lors de la récupération des fichiers.');
     }
-  }, []);
+  };
 
-  const handleDeleteUser = useCallback(async (userId) => {
+  const handleDeleteUser = async (userId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -82,25 +83,21 @@ const AdminPage = () => {
         return;
       }
 
-      setUserAction('delete');
-
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       };
 
-      await axios.delete(`http://localhost:5000/api/admin/delete-user/${userId}`, config);
+      await axios.post('http://localhost:5000/api/delete-user', { userId }, config);
       setUsers(users.filter(user => user.id !== userId));
-      setUserAction(null);
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'utilisateur:', error);
-      setError('Erreur lors de la suppression de l\'utilisateur.');
-      setUserAction(null);
+      setError('Erreur lors de la suppression.');
     }
-  }, [users]);
+  };
 
-  const handleChangeRole = useCallback(async (userId, currentRole) => {
+  const handleChangeRole = async (userId, currentRole) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -109,23 +106,19 @@ const AdminPage = () => {
       }
 
       const newRole = currentRole === 'admin' ? 'user' : 'admin';
-      setUserAction('changeRole');
-
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       };
 
-      await axios.patch('http://localhost:5000/api/admin/change-role', { userId, newRole }, config);
+      await axios.post('http://localhost:5000/api/change-role', { userId, newRole }, config);
       setUsers(users.map(user => (user.id === userId ? { ...user, role: newRole } : user)));
-      setUserAction(null);
     } catch (error) {
       console.error('Erreur lors du changement de rôle de l\'utilisateur:', error);
       setError('Erreur lors du changement de rôle.');
-      setUserAction(null);
     }
-  }, [users]);
+  };
 
   // Utiliser useMemo pour éviter de recréer les colonnes à chaque re-rendu
   const columnHelper = createColumnHelper();
@@ -134,36 +127,43 @@ const AdminPage = () => {
     columnHelper.accessor('id', {
       header: 'ID',
       cell: info => info.getValue(),
+      sortingFn: 'basic', // Permettre le tri de cette colonne
     }),
     columnHelper.accessor('name', {
       header: 'Nom',
       cell: info => info.getValue(),
+      sortingFn: 'alphanumeric',
     }),
     columnHelper.accessor('surname', {
       header: 'Prénom',
       cell: info => info.getValue(),
+      sortingFn: 'alphanumeric',
     }),
     columnHelper.accessor('email', {
       header: 'Email',
       cell: info => info.getValue(),
+      sortingFn: 'alphanumeric',
     }),
     columnHelper.accessor('role', {
       header: 'Rôle',
       cell: info => info.getValue(),
+      sortingFn: 'alphanumeric',
     }),
     columnHelper.accessor('fileCount', {
       header: 'Nombre de fichiers',
       cell: info => info.getValue(),
+      sortingFn: 'basic',
     }),
     columnHelper.accessor('totalSize', {
       header: 'Taille totale des fichiers (Mo)',
       cell: info => (info.getValue() / (1024 * 1024)).toFixed(2),
+      sortingFn: 'basic',
     }),
     columnHelper.display({
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <div key={`actions-${row.original.id}`}>
+        <div>
           <button onClick={() => handleViewFiles(row.original.id)}>Voir les fichiers</button>
           <button onClick={() => handleDeleteUser(row.original.id)}>Supprimer</button>
           <button onClick={() => handleChangeRole(row.original.id, row.original.role)}>
@@ -172,7 +172,7 @@ const AdminPage = () => {
         </div>
       ),
     }),
-  ], [handleViewFiles, handleDeleteUser, handleChangeRole]);
+  ], [columnHelper, handleViewFiles, handleDeleteUser, handleChangeRole]);
 
   const table = useReactTable({
     data: users,
@@ -180,7 +180,6 @@ const AdminPage = () => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    enableSorting: true,
   });
 
   if (loading) {
@@ -201,16 +200,11 @@ const AdminPage = () => {
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    style={{ cursor: 'pointer' }}
-                  >
+                  <th key={header.id} onClick={header.column.getToggleSortingHandler()}>
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                    {{
-                      asc: ' 🔼',
-                      desc: ' 🔽',
-                    }[header.column.getIsSorted()] ?? null}
+                    {header.column.getIsSorted() ? (
+                      header.column.getIsSorted() === 'asc' ? ' 🔼' : ' 🔽'
+                    ) : null}
                   </th>
                 ))}
               </tr>

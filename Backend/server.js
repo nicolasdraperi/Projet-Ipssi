@@ -38,7 +38,9 @@ app.use('/uploads', express.static('uploads'));
 sequelize.sync({ alter: true })
 .then(() => console.log('Base de données synchronisée avec Sequelize.'))
 .catch(err => console.error('Erreur lors de la synchronisation de la base de données:', err));
+// Utiliser les routes utilisateur et admin
 app.use('/api', userRoutes);
+app.use('/api', adminRoutes); 
 // ----------------------------
 // ROUTES D'INSCRIPTION ET CONNEXION
 // ----------------------------

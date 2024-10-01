@@ -1,31 +1,47 @@
 const User = require('../models/User');
 const File = require('../models/File');
 const Invoice = require('../models/invoices');
-  // Assurez-vous que Invoice est exporté correctement dans Invoice.js
 const fs = require('fs');
 const path = require('path');
-
+const sequelize = require('../config/database');
 
 // =================================
 // 1. Récupérer les statistiques générales (nombre d'utilisateurs, fichiers, etc.)
 // =================================
 exports.getStats = async (req, res) => {
     try {
-        const totalUsers = await User.count();  // Compter le nombre total d'utilisateurs
-        const totalFiles = await File.count();  // Compter le nombre total de fichiers uploadés
-        const filesPerUser = await File.findAll({
-            attributes: ['ID_Utilisateur', [sequelize.fn('COUNT', sequelize.col('ID_Fichier')), 'totalFiles']],
-            group: ['ID_Utilisateur'],
-        });  // Récupérer la répartition des fichiers par utilisateur
-
-        res.status(200).json({ 
-            totalUsers, 
-            totalFiles, 
-            filesPerUser 
+        const users = await User.findAll({
+            attributes: ['ID_Utilisateur', 'Nom', 'Prenom', 'Email', 'role'],
+            include: [{
+                model: File,
+                attributes: []
+            }],
+            attributes: {
+                include: [
+                    [sequelize.fn('COUNT', sequelize.col('Files.ID_Fichier')), 'fileCount'],
+                    [sequelize.fn('SUM', sequelize.col('Files.Taille')), 'totalSize']
+                ]
+            },
+            group: ['User.ID_Utilisateur', 'Files.ID_Utilisateur']  // Ajoutez Files.ID_Utilisateur au groupement
         });
+
+        const userData = users.map(user => {
+            const fileData = user.Files && user.Files.length > 0 ? user.Files[0].dataValues : { fileCount: 0, totalSize: 0 };
+            return {
+                id: user.ID_Utilisateur,
+                name: user.Nom,
+                surname: user.Prenom,
+                email: user.Email,
+                role: user.role,
+                fileCount: fileData.fileCount || 0,
+                totalSize: fileData.totalSize || 0,
+            };
+        });
+
+        res.json(userData);
     } catch (error) {
-        console.error('Erreur lors de la récupération des statistiques', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques.' });
+        console.error('Erreur lors de la récupération des statistiques des utilisateurs:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
     }
 };
 
@@ -102,7 +118,7 @@ exports.getInvoicesByUser = (req, res) => {
 // =================================
 exports.generateInvoice = (req, res) => {
     const { userId, amount, description } = req.body;
-    
+
     try {
         const newInvoice = new Invoice(invoices.length + 1, userId, new Date(), amount, description);
         invoices.push(newInvoice);  // Ajouter la facture à la "base de données" simulée
@@ -131,19 +147,17 @@ exports.changeUserRole = async (req, res) => {
         res.json({ message: `Le rôle de l'utilisateur a été mis à jour en ${newRole}.`, user });
     } catch (error) {
         console.error('Erreur lors de la mise à jour du rôle', error);
-        res.status(500).json({ message: 'Erreur lors de la mise à jour du rôle.', error });
+        res.status(500).json({ message: 'Erreur lors de la mise à jour du rôle.' });
     }
 };
 
 // =================================
 // 7. Supprimer un utilisateur (admin only)
 // =================================
-
 exports.DeleteUser = async (req, res) => {
     const { userId } = req.body;
 
     try {
-
         const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ message: 'User non trouvé.' });
@@ -158,37 +172,7 @@ exports.DeleteUser = async (req, res) => {
 };
 
 // =================================
-// 8. Obtenir toutes les statistique (admin only)
+// 8. Obtenir toutes les statistiques (admin only)
 // =================================
-exports.getStats = async (req, res) => {
-    try {
-        const users = await User.findAll({
-            attributes: ['ID_Utilisateur', 'Nom', 'Prenom', 'Email', 'role'],
-            include: [{
-                model: File,
-                attributes: [
-                    [sequelize.fn('COUNT', sequelize.col('Files.ID_Fichier')), 'fileCount'],
-                    [sequelize.fn('SUM', sequelize.col('Files.Taille')), 'totalSize']
-                ]
-            }],
-            group: ['User.ID_Utilisateur']  
-        });
-        const userData = users.map(user => {
-            const fileData = user.Files[0] ? user.Files[0].dataValues : { fileCount: 0, totalSize: 0 };
-            return {
-                id: user.ID_Utilisateur,
-                name: user.Nom,
-                surname: user.Prenom,
-                email: user.Email,
-                role: user.role,
-                fileCount: fileData.fileCount || 0, 
-                totalSize: fileData.totalSize || 0   
-            };
-        });
+// Note: Cette méthode est déjà corrigée en début de fichier sous la méthode `getStats`.
 
-        res.json(userData);
-    } catch (error) {
-        console.error('Error fetching user stats:', error);
-        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
-    }
-};

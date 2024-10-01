@@ -11,6 +11,7 @@ const FileList = () => {
     const [showModal, setShowModal] = useState(false); // État pour la modal de confirmation
     const [fileToDelete, setFileToDelete] = useState(null); // Stocker le fichier à supprimer
 
+    // Fonction pour récupérer les fichiers
     useEffect(() => {
         const fetchFiles = async () => {
             try {
@@ -22,7 +23,11 @@ const FileList = () => {
                 setFiles(response.data.files);
                 setTotalPages(response.data.totalPages); // Nombre total de pages
             } catch (error) {
-                setError('Erreur lors du chargement des fichiers.');
+                if (error.response) {
+                    setError(`Erreur : ${error.response.data.message}`);
+                } else {
+                    setError('Erreur lors du chargement des fichiers.');
+                }
             }
         };
 
@@ -31,22 +36,25 @@ const FileList = () => {
 
     // Fonction pour gérer la suppression après confirmation
     const handleDelete = async () => {
+        if (!fileToDelete) return;
+
         try {
             await axios.delete(`http://localhost:5000/api/files/${fileToDelete}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
-            setFiles(files.filter(file => file.name !== fileToDelete)); // Suppression locale du fichier
+            // Mise à jour locale de la liste des fichiers après suppression
+            setFiles(files.filter(file => file.id !== fileToDelete));
             setShowModal(false); // Fermer la modal après suppression
         } catch (error) {
             setError('Erreur lors de la suppression du fichier.');
         }
     };
 
-    // Fonction pour ouvrir la modal
-    const openConfirmModal = (fileName) => {
-        setFileToDelete(fileName); // Définir le fichier à supprimer
+    // Fonction pour ouvrir la modal de confirmation de suppression
+    const openConfirmModal = (fileId) => {
+        setFileToDelete(fileId); // Définir l'ID du fichier à supprimer
         setShowModal(true); // Ouvrir la modal
     };
 
@@ -68,7 +76,7 @@ const FileList = () => {
             <ul className="file-list">
                 {files.length > 0 ? (
                     files.map((file, index) => {
-                        const uniqueKey = file.id || file.name || index;
+                        const uniqueKey = file.id || index;
                         return (
                             <li key={uniqueKey} className="file-item">
                                 <div className="file-info">
@@ -86,7 +94,7 @@ const FileList = () => {
                                     )}
                                 </div>
 
-                                <button className="delete-btn" onClick={() => openConfirmModal(file.name)}>Supprimer</button>
+                                <button className="delete-btn" onClick={() => openConfirmModal(file.id)}>Supprimer</button>
                             </li>
                         );
                     })

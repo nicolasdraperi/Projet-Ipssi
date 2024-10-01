@@ -9,6 +9,7 @@ router.get('/admin/users', verifyToken, isAdmin, adminController.getUsers);
 router.delete('/admin/users/:userId', verifyToken, isAdmin, adminController.deleteUser);
 router.get('/admin/stats', verifyToken, isAdmin, adminController.getStats);
 router.get('/admin/invoices/:userId', verifyToken, isAdmin, adminController.getInvoicesByUser);
+router.get('/admin/user-stats', verifyToken, isAdmin, adminController.getStats);
 
 router.post('/admin/change-role', verifyToken, isAdmin, adminController.changeUserRole);
 

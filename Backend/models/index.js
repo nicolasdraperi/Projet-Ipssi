@@ -4,7 +4,4 @@ const Invoice = require('./invoices');
 User.hasMany(Invoice, { foreignKey: 'userId', as: 'invoices' });
 Invoice.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
-module.exports = {
-    User,
-    Invoice,
-};
+module.exports = { User, Invoice };

@@ -1,8 +1,10 @@
 const User = require('../models/User');
 const File = require('../models/File');
-const { Invoice, invoices } = require('../models/Invoice');
+const Invoice = require('../models/invoices');
+  // Assurez-vous que Invoice est exporté correctement dans Invoice.js
 const fs = require('fs');
 const path = require('path');
+
 
 // =================================
 // 1. Récupérer les statistiques générales (nombre d'utilisateurs, fichiers, etc.)

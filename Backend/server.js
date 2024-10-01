@@ -6,15 +6,16 @@ const sequelize = require('./config/database'); // Connexion Sequelize à MySQL
 const multer = require('multer'); // Pour l'upload de fichiers
 const path = require('path');
 const fs = require('fs'); // Pour la gestion des fichiers (suppression)
-const File = require('./models/File');
-const userRoutes = require('./routes/userRoutes');  // Chemin vers ton fichier userRoutes.js
 const { isAuthenticated, isAdmin } = require('./middleware/authMiddleware');
 const bodyParser = require('body-parser');
 const PDFDocument = require('pdfkit');
 const paypal = require('paypal-rest-sdk');
-const userRoutes = require('./routes/userRoutes'); // Importez les routes utilisateur
-const adminRoutes = require('./routes/adminRoutes'); // Importez les routes admin
-const { User, Invoice } = require('./models');
+const nodemailer = require('nodemailer');
+const { User, File, Invoice } = require('./models');
+
+// Importer les routes
+const userRoutes = require('./routes/userRoutes');  // Chemin vers les routes utilisateur
+const adminRoutes = require('./routes/adminRoutes'); // Chemin vers les routes admin
 
 //Config Paypal
 paypal.configure({
@@ -24,7 +25,7 @@ paypal.configure({
 }); 
 
 //Config Mail
-const nodemailer = require('nodemailer');
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {

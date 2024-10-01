@@ -12,7 +12,8 @@ const { isAuthenticated, isAdmin } = require('./middleware/authMiddleware');
 const bodyParser = require('body-parser');
 const PDFDocument = require('pdfkit');
 const paypal = require('paypal-rest-sdk');
-
+const userRoutes = require('./routes/userRoutes'); // Importez les routes utilisateur
+const adminRoutes = require('./routes/adminRoutes'); // Importez les routes admin
 const { User, Invoice } = require('./models');
 
 //Config Paypal
@@ -577,6 +578,48 @@ app.post('/api/download-invoice', isAuthenticated, async (req, res) => {
         res.status(500).json({ message: 'Erreur lors de la génération du PDF.' });
     }
 });
+
+// Route pour récupérer les statistiques des utilisateurs
+app.get('/api/admin/user-stats', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // Récupérer tous les utilisateurs avec le nombre de fichiers et la taille totale des fichiers
+        const users = await User.findAll({
+            attributes: ['ID_Utilisateur', 'Nom', 'Prenom', 'Email', 'role'],
+            include: [
+                {
+                    model: File,
+                    attributes: [
+                        [sequelize.fn('COUNT', sequelize.col('Files.ID_Fichier')), 'fileCount'],
+                        [sequelize.fn('SUM', sequelize.col('Files.Taille')), 'totalSize']
+                    ],
+                }
+            ],
+            group: ['User.ID_Utilisateur']
+        });
+
+        // Format des données renvoyées au client
+        const userData = users.map(user => {
+            const fileData = user.Files && user.Files.length > 0 ? user.Files[0].dataValues : { fileCount: 0, totalSize: 0 };
+            return {
+                id: user.ID_Utilisateur,
+                name: user.Nom,
+                surname: user.Prenom,
+                email: user.Email,
+                role: user.role,
+                fileCount: fileData.fileCount || 0,
+                totalSize: fileData.totalSize || 0,
+            };
+        });
+
+        res.json(userData);
+    } catch (error) {
+        console.error('Erreur lors de la récupération des statistiques des utilisateurs:', error);
+        res.status(500).json({ message: 'Erreur lors de la récupération des statistiques des utilisateurs.' });
+    }
+});
+
+// Attachez les routes admin
+app.use('/api', adminRoutes); // Ajoutez ceci pour que le serveur utilise les routes admin
 
 const PORT = 5000;
 app.listen(PORT, () => {

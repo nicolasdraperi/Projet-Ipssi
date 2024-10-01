@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import {
-  createColumnHelper,
   useReactTable,
+  createColumnHelper,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  flexRender,
+  flexRender
 } from '@tanstack/react-table';
+
+
+
+
 import '../assets/css/AdminPage.css';
 
 const AdminPage = () => {
@@ -33,7 +37,9 @@ const AdminPage = () => {
           },
         };
 
-        const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
+        // Assurez-vous que cette URL pointe vers le bon backend
+const response = await axios.get('http://localhost:5000/api/admin/user-stats', config);
+
         setUsers(response.data);
         setLoading(false);
       } catch (error) {
